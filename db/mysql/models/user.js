@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      User.belongsTo(models.Group);
+      User.belongsToMany(models.Group,{through:"UserGroup"});
       User.belongsToMany(models.Role,{through:"UserRole"})
     }
   };
@@ -47,15 +47,7 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.BOOLEAN,
       allowNull:false,
       defaultValue:true
-    },
-    roleId:{
-      type:DataTypes.INTEGER,
-      allowNull:false 
-    },
-    groupId:{
-      type:DataTypes.INTEGER,
-      allowNull:false
-    },
+    }
   }, {
     sequelize,
     modelName: 'User',

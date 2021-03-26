@@ -12,9 +12,9 @@ module.exports = {
      * }], {});
     */
     await queryInterface.bulkInsert('Groups',[
-      {groupName:"上海诺诚",parentGroupId:null,status:true,userId:1,createdAt:new Date(),updatedAt:new Date()},
-      {groupName:"上海闵行测试医院1",parentGroupId:null,status:true,userId:2,createdAt:new Date(),updatedAt:new Date()},
-      {groupName:"上海闵行测试医院2",parentGroupId:null,status:true,userId:3,createdAt:new Date(),updatedAt:new Date()},
+      {groupName:"上海诺诚组",parentGroupId:null,status:true,createdAt:new Date(),updatedAt:new Date()},
+      {groupName:"上海闵行测试医院1组",parentGroupId:null,status:true,createdAt:new Date(),updatedAt:new Date()},
+      {groupName:"上海闵行测试医院2组",parentGroupId:null,status:true,createdAt:new Date(),updatedAt:new Date()},
     ])
   },
 

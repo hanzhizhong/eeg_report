@@ -8,8 +8,14 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      permissionType: {
+      typeName: {
         type: Sequelize.STRING
+      },
+      typeId:{
+        type:Sequelize.INTEGER
+      },
+      actionId:{
+        type:Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,

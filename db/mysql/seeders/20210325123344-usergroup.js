@@ -11,10 +11,8 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
-    await queryInterface.bulkInsert('PermissionFiles',[
-      {permissionId:1,fileId:1,createdAt:new Date(),updatedAt:new Date()},
-      {permissionId:1,fileId:2,createdAt:new Date(),updatedAt:new Date()},
-      {permissionId:1,fileId:3,createdAt:new Date(),updatedAt:new Date()}
+     await queryInterface.bulkInsert("UserGroups",[
+      {userId:1,groupId:1,createdAt:new Date(),updatedAt:new Date()}
     ])
   },
 
@@ -25,6 +23,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete('PermissionFiles',null,{})
+    await queryInterface.bulkDelete('UserGroups',null,{})
   }
 };

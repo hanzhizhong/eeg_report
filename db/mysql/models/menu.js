@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Menu.belongsToMany(models.Permission,{through:"PermissionMenu"});
+      //Menu.belongsTo(models.Permission,{foreignKey:"id"});
     }
   };
   Menu.init({

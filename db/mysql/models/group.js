@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Group.belongsToMany(models.Role,{through:"GroupRole"})
-      Group.hasMany(models.User)
+      Group.belongsToMany(models.User,{through:"UserGroup"})
     }
   };
   Group.init({
@@ -26,9 +26,6 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.BOOLEAN,
       allowNull:false,
       defaultValue:true
-    },
-    userId:{
-      type:DataTypes.INTEGER
     },
   }, {
     sequelize,

@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Element.belongsToMany(models.Permission,{through:"PermissionElement"});
+      //Element.belongsToMany(models.Permission,{through:"PermissionElement"});
     }
   };
   Element.init({

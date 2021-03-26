@@ -12,15 +12,17 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Permission.belongsToMany(models.Role,{through:"RolePermission"});
-      Permission.belongsToMany(models.Action,{through:"PermissionAction"});
-      Permission.belongsToMany(models.Menu,{through:"PermissionMenu"});
-      Permission.belongsToMany(models.File,{through:"PermissionFile"});
-      Permission.belongsToMany(models.Element,{through:"PermissionElement"});
+      Permission.belongsTo(models.Menu,{foreignKey:"typeId"});
+      Permission.belongsTo(models.File,{foreignKey:"typeId"});
+      Permission.belongsTo(models.Element,{foreignKey:"typeId"});
+      Permission.belongsTo(models.Action,{foreignKey:"actionId"})
 
     }
   };
   Permission.init({
-    permissionType: DataTypes.STRING
+    typeName: DataTypes.STRING,
+    typeId:DataTypes.INTEGER,
+    actionId:DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Permission',

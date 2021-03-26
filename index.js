@@ -3,10 +3,19 @@ const app=new Koa()
 const Router=require('koa-router')
 const router=new Router()
 const koaBody=require('koa-body')
+const jsonError=require('koa-json-error');
+const parameter=require('koa-parameter')
 
 const routesUrl=require('./router')
 //监听请求体数据
+app.use(jsonError({
+    postFormat:(e,{stack,...rest})=>{
+        return process.env.NODE_ENV==='production'?rest:{...rest}
+    }
+}))
+parameter(app);
 app.use(koaBody())
+//使用传输数据验证功能
 
 router.use(routesUrl.routes())
 //启动路由
