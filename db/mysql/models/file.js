@@ -16,7 +16,20 @@ module.exports = (sequelize, DataTypes) => {
   };
   File.init({
     fileName: {
-      type: DataTypes.STRING
+      type: DataTypes.STRING,
+      unique:true
+    },
+    fileUrl:{
+      type:DataTypes.STRING
+    },
+    parentFileId:{
+      type:DataTypes.INTEGER
+    },
+    fileSize:{
+      type:DataTypes.INTEGER
+    },
+    uploadUserId:{
+      type:DataTypes.INTEGER
     },
     status:{
       type:DataTypes.BOOLEAN,

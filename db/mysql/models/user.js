@@ -19,18 +19,19 @@ module.exports = (sequelize, DataTypes) => {
     userName: {
       type: DataTypes.STRING,
       allowNull:false,
-    },
-    institutionId:{
-      type:DataTypes.INTEGER,
+      unique:"userIndex"
     },
     loginName:{
-      type:DataTypes.STRING
+      type:DataTypes.STRING,
+      unique:true
     },
     email:{
-      type:DataTypes.STRING
+      type:DataTypes.STRING,
+      unique:"userIndex"
     },
     phone:{
-      type:DataTypes.INTEGER
+      type:DataTypes.INTEGER,
+      unique:"userIndex"
     },
     gender:{
       type: DataTypes.ENUM,

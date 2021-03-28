@@ -1,28 +1,37 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Roles', {
+    await queryInterface.createTable('Hospitals', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      roleName: {
-        type: Sequelize.STRING,
-        unique:true 
-      },
-      roleEncode:{
+      hospitalName: {
         type:Sequelize.STRING,
-        unique:true
+        unique:"hospitalIndex" 
       },
-      parentRoleId:{
-        type:Sequelize.INTEGET
+      parentHospitalId:{
+        type:Sequelize.INTEGER 
       },
       status:{
         type:Sequelize.BOOLEAN,
-        allowNull:false,
-        defaultValue:true
+        allowNull:false, 
+        defaultValue:1
+      },
+      address:{
+        type:Sequelize.STRING 
+      },
+      introduction:{
+        type:Sequelize.STRING 
+      },
+      picture:{
+        type:Sequelize.STRING 
+      },
+      hospitalEncode:{
+        type:Sequelize.STRING,
+        unique:"hospitalIndex"
       },
       createdAt: {
         allowNull: false,
@@ -35,6 +44,6 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Roles');
+    await queryInterface.dropTable('Hospitals');
   }
 };

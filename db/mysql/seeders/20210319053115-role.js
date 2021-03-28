@@ -12,10 +12,10 @@ module.exports = {
      * }], {});
     */
     await queryInterface.bulkInsert('Roles',[
-      {roleName:"超级管理员",roleEncode:"superadmin",status:true,createdAt:new Date(),updatedAt:new Date()},
-      {roleName:"管理员",roleEncode:"admin",status:true,createdAt:new Date(),updatedAt:new Date()},
-      {roleName:"普通用户",roleEncode:"user",status:true,createdAt:new Date(),updatedAt:new Date()},
-      {roleName:"访客",roleEncode:"guest",status:true,createdAt:new Date(),updatedAt:new Date()}
+      {roleName:"超级管理员",roleEncode:"superadmin",parentRoleId:null,status:true,createdAt:new Date(),updatedAt:new Date()},
+      {roleName:"管理员",roleEncode:"admin",parentRoleId:null,status:true,createdAt:new Date(),updatedAt:new Date()},
+      {roleName:"普通用户",roleEncode:"user",parentRoleId:null,status:true,createdAt:new Date(),updatedAt:new Date()},
+      {roleName:"访客",roleEncode:"guest",parentRoleId:null,status:true,createdAt:new Date(),updatedAt:new Date()}
     ])
   },
 

@@ -12,9 +12,9 @@ module.exports = {
      * }], {});
     */
     await queryInterface.bulkInsert('Users',[
-      {userName:"王祥",institutionId:1,loginName:"wangxiang",email:"12345@qq.com",phone:"13668789945",gender:'男',avatar:'',password:"123456",status:true,createdAt:new Date(),updatedAt:new Date()},
-      {userName:"韩忠",institutionId:1,loginName:"hanzhong",email:"12345@qq.com",phone:"13668789945",gender:'男',avatar:'',password:"123456",status:true,createdAt:new Date(),updatedAt:new Date()},
-      {userName:"傅敏华",institutionId:1,loginName:"david",email:"12345@qq.com",phone:"13668789945",gender:'男',avatar:'',password:"123456",status:true,createdAt:new Date(),updatedAt:new Date()},
+      {userName:"王祥",loginName:"wangxiang",email:"12345@qq.com",phone:"13668789945",gender:'男',avatar:'',password:"123456",status:true,createdAt:new Date(),updatedAt:new Date()},
+      {userName:"韩忠",loginName:"hanzhong",email:"12345@qq.com",phone:"13668789945",gender:'男',avatar:'',password:"123456",status:true,createdAt:new Date(),updatedAt:new Date()},
+      {userName:"傅敏华",loginName:"david",email:"12345@qq.com",phone:"13668789945",gender:'男',avatar:'',password:"123456",status:true,createdAt:new Date(),updatedAt:new Date()},
     ])
   },
 

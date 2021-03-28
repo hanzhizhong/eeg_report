@@ -11,18 +11,19 @@ module.exports = {
       userName: {
         type: Sequelize.STRING,
         allowNull:false,
-      },
-      institutionId:{
-        type:Sequelize.INTEGER,
+        unique:"userIndex"
       },
       loginName:{
-        type:Sequelize.STRING
+        type:Sequelize.STRING,
+        unique:true
       },
       email:{
-        type:Sequelize.STRING
+        type:Sequelize.STRING,
+        unique:"userIndex"
       },
       phone:{
-        type:Sequelize.STRING
+        type:Sequelize.INTEGER,
+        unique:"userIndex"
       },
       gender:{
         type: Sequelize.ENUM,

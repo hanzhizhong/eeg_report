@@ -11,11 +11,6 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
-    await queryInterface.bulkInsert('Files',[
-      {fileName:"报告1",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()},
-      {fileName:"报告2",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()},
-      {fileName:"报告3",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()}
-    ])
   },
 
   down: async (queryInterface, Sequelize) => {
@@ -25,6 +20,5 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete('Files',null,{})
   }
 };

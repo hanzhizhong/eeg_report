@@ -11,10 +11,9 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
-    await queryInterface.bulkInsert('Files',[
-      {fileName:"报告1",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()},
-      {fileName:"报告2",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()},
-      {fileName:"报告3",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()}
+    await queryInterface.bulkInsert("Doctors",[
+      {doctorName:"李青青",gender:"女",phone:"13756882344",status:true,createdAt:new Date(),updatedAt:new Date()},
+      {doctorName:"左连生",gender:"男",phone:"13756882322",status:true,createdAt:new Date(),updatedAt:new Date()}
     ])
   },
 
@@ -25,6 +24,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete('Files',null,{})
+    await queryInterface.bulkDelete('Doctors',null,{})
   }
 };

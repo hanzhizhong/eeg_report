@@ -51,19 +51,27 @@ exports.checkLoginStatus=async (ctx,next)=>{
 }
 
 //请求个人信息并返回当前用户配对的菜单项
-exports.userInfo=ctx=>{
-    console.log('user',ctx.state.user)
-    User.findByPk(id,{
+exports.getLoginUserInfo=async ctx=>{
+    let {id}=ctx.state.user;
+    let user=await User.findByPk(id,{
+        attributes:{exclude:['password']},
         include:[
             {model:Role,through:{attributes:[]},include:[
                 {model:Permission,through:{attributes:[]}}
             ]}
         ]
     })
-    /* let userMenus=new Map(),
+    user=JSON.parse(JSON.stringify(user));
+    let roles=user.Roles;
+    delete user.Roles;
+    let {menus=[],elements=[],files=[]}=await matchCurUserMenus(roles)
+    ctx.body={user,menus,elements,files}
+}
+//根据用户的角色匹配用户的菜单
+const matchCurUserMenus=async roles=>{
+    let userMenus=new Map(),
             userElements=new Map(),
             userFiles=new Map()
-        let roles=JSON.parse(JSON.stringify(user)).Roles;
         for(let i=0;i<roles.length;i++){
             let permissions=roles[i].Permissions;
             for(let i=0;i<permissions.length;i++){
@@ -81,7 +89,6 @@ exports.userInfo=ctx=>{
                     userElements.set(permissions[i].typeId,[...new Set([...t_ms,permissions[i].actionId])])
                 }
                 else if(permissions[i].typeName==="FILE"){
-                    console.log('ssss',permissions[i].typeId)
                     let t_ms=userFiles.get(permissions[i].typeId)||[];
                     userFiles.set(permissions[i].typeId,t_ms)
                     if(!permissions[i].actionId) continue;
@@ -89,7 +96,21 @@ exports.userInfo=ctx=>{
                 }
             }
         }
-        
 
-        ctx.body={menus:[...userMenus.keys()],elements:[...userElements.keys()],files:[...userFiles.keys()]} */
+        //遍历所有的菜单项找出属于当前用户的
+        let [menus,elements,files]=await Promise.all([findCurrentUserItems(Menu,[...userMenus.keys()]),findCurrentUserItems(Element,[...userElements.keys()]),findCurrentUserItems(File,[...userFiles.keys()])])
+        
+        return {menus,elements,files}
+}
+
+const findCurrentUserItems=async (type,aId)=>{
+    let types=await type.findAll()
+    let tmp=[]
+    types=JSON.parse(JSON.stringify(types))
+    for(let i=0;i<types.length;i++){
+        if(aId.includes(types[i].id)){
+            tmp.push(types[i]) 
+        }
+    }
+    return tmp;
 }

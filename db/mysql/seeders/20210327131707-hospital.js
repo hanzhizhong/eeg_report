@@ -11,10 +11,8 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
-    await queryInterface.bulkInsert('Files',[
-      {fileName:"报告1",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()},
-      {fileName:"报告2",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()},
-      {fileName:"报告3",parentFileId:null,fileUrl:"",fileSize:0,status:true,createdAt:new Date(),updatedAt:new Date()}
+    await queryInterface.bulkInsert("Hospitals",[
+      {hospitalName:"上海诺诚",parentHospitalId:null,status:true,address:"南沙路68号",introduction:"sdfadfadfa",picture:"",hospitalEncode:"SHANGHAINOUCHENG",createdAt:new Date(),updatedAt:new Date()}
     ])
   },
 
@@ -25,6 +23,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    await queryInterface.bulkDelete('Files',null,{})
+    await queryInterface.bulkDelete("Hospitals",null,{})
   }
 };
