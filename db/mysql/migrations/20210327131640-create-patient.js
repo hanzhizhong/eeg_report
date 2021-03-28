@@ -55,8 +55,8 @@ module.exports = {
       },
       reportStatus:{
         type:Sequelize.ENUM,
-        values:[0,1,2,3],
-        defaultValue:3
+        values:['0','1','2','3'],
+        defaultValue:'3'
       },
       note:{
         type:Sequelize.STRING

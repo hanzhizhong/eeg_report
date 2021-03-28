@@ -7,6 +7,7 @@ const jsonError=require('koa-json-error');
 const parameter=require('koa-parameter')
 
 const routesUrl=require('./router')
+const { checkLoginStatus } = require('./controller/users')
 //监听请求体数据
 app.use(jsonError({
     postFormat:(e,{stack,...rest})=>{
@@ -16,9 +17,10 @@ app.use(jsonError({
 parameter(app);
 app.use(koaBody())
 //使用传输数据验证功能
-
+app.use(checkLoginStatus)
 router.use(routesUrl.routes())
 //启动路由
+
 app.use(router.routes()) 
 //路由的检测功能 预检 http options中本路径实现和允许的方法 2.412未实现501不允许
 app.use(router.allowedMethods())

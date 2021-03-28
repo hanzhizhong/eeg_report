@@ -1,9 +1,8 @@
 const {User,Role,Group,Menu,Permission,Element,Action,File}=require('../db/mysql/models')
 const {encrypt,decrypt}=require('../utils/tokenVerify')
 //分页查询
-exports.findByPages=async ctx=>{
+exports.find=async ctx=>{
     try{
-        console.log('ttt',ctx.query)
         ctx.body= (await User.findAll({attributes:{exclude:['password']},include:[
             {model:Role,through:{attributes:[]}},
             {model:Group,through:{attributes:[]}}
@@ -40,10 +39,16 @@ exports.login=async ctx=>{
 exports.checkLoginStatus=async (ctx,next)=>{
     //解码token
     try{
-        let token=ctx.header.authorization.replace('Bearer ','')
-        let {loginName,id}=decrypt(token)
-        ctx.state.user={loginName,id}
-       await next()
+        if(!ctx.url!=='/api/users/login'){
+            let token=ctx.header.authorization.replace('Bearer ','')
+            let {loginName,id}=decrypt(token)
+            console.log('kkkk',loginName,id)
+            ctx.state.user={loginName,id}
+           await next()
+        }else{
+            await next()
+        }
+        
     }catch(err){
         throw new Error(err)
     }
@@ -52,7 +57,9 @@ exports.checkLoginStatus=async (ctx,next)=>{
 
 //请求个人信息并返回当前用户配对的菜单项
 exports.getLoginUserInfo=async ctx=>{
+    console.log('tttttt',ctx.state)
     let {id}=ctx.state.user;
+    console.log('aaaaa',id)
     let user=await User.findByPk(id,{
         attributes:{exclude:['password']},
         include:[
@@ -67,6 +74,45 @@ exports.getLoginUserInfo=async ctx=>{
     let {menus=[],elements=[],files=[]}=await matchCurUserMenus(roles)
     ctx.body={user,menus,elements,files}
 }
+
+//根据id值编辑用户信息
+exports.editUserInfoById=async ctx=>{
+    try{
+        ctx.verifyParams({
+            userName:{type:'string',required:true},
+            loginName:{type:'string',required:true},
+            email:{type:"email"},
+            phone:{type:"string",format:/\d{11}/},
+            password:{type:"string",min:6,allowEmpty:false}
+        })
+        let {userName,loginName,email=null,phone=null,gender,avatar,password,status}=ctx.reqeust.body;
+
+        ctx.body=(await User.update({userName,loginName,email,phone,gender,avatar,password,status,updatedAt:new Date()},{
+            where:{id:ctx.params.id}
+        }))
+
+    }catch(err){
+        throw new Error(err)
+    }
+}
+
+//根据id值删除用户
+exports.removeUserById=async ctx=>{
+    try{
+        ctx.body=(await User.destroy({where:{id:ctx.params.id},force:true}))
+    }catch(err){
+        throw new Error(err)
+    }
+}
+//根据id值查询用户
+exports.findUserById=async ctx=>{
+    try{
+        ctx.body=(await User.findOne({where:{id:ctx.params.id}}))
+    }catch(err){
+
+    }
+}
+
 //根据用户的角色匹配用户的菜单
 const matchCurUserMenus=async roles=>{
     let userMenus=new Map(),

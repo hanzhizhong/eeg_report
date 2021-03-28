@@ -2,11 +2,16 @@ const Router=require('koa-router')
 const router=new Router({prefix:'/users'})
 
 
-const {findByPages,createUser,checkLoginStatus,login,getLoginUserInfo}=require('../controller/users')
+const {find,createUser,login,getLoginUserInfo,editUserInfoById,findUserById,removeUserById}=require('../controller/users')
 
-router.get('/',checkLoginStatus,findByPages)
+router.get('/',find)
 router.post('/',createUser)
+router.patch('/:id',editUserInfoById)
+router.get('/:id',findUserById)
+router.delete('/:id',removeUserById)
 router.post('/login',login)
-router.get('/me',checkLoginStatus,getLoginUserInfo)
+router.get('/me',getLoginUserInfo)
+
+
 
 module.exports=router;

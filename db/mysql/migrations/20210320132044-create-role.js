@@ -17,7 +17,7 @@ module.exports = {
         unique:true
       },
       parentRoleId:{
-        type:Sequelize.INTEGET
+        type:Sequelize.INTEGER
       },
       status:{
         type:Sequelize.BOOLEAN,

@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       unique:"userIndex"
     },
     phone:{
-      type:DataTypes.INTEGER,
+      type:DataTypes.STRING,
       unique:"userIndex"
     },
     gender:{

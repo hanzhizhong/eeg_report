@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       unique:true
     },
     parentRoleId:{
-      type:DataTypes.INTEGET
+      type:DataTypes.INTEGER
     },
     status:{
       type:DataTypes.BOOLEAN,

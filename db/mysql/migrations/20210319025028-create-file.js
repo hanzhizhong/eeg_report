@@ -12,6 +12,18 @@ module.exports = {
         type: Sequelize.STRING,
         unique:true
       },
+      fileUrl:{
+        type:Sequelize.STRING
+      },
+      parentFileId:{
+        type:Sequelize.INTEGER
+      },
+      fileSize:{
+        type:Sequelize.INTEGER
+      },
+      uploadUserId:{
+        type:Sequelize.INTEGER
+      },
       status:{
         type:Sequelize.BOOLEAN,
         defaultValue:true,
