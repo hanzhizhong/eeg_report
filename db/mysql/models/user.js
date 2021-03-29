@@ -35,7 +35,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     gender:{
       type: DataTypes.ENUM,
-      values: ['男', '女', '其他']
+      values: ['男', '女', '其他'],
+      defaultValue:"其他"
     },
     avatar:{
       type:DataTypes.STRING

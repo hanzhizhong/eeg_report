@@ -27,7 +27,8 @@ module.exports = {
       },
       gender:{
         type: Sequelize.ENUM,
-        values: ['男', '女', '其他']
+        values: ['男', '女', '其他'],
+        defaultValue:"其他"
       },
       avatar:{
         type:Sequelize.STRING

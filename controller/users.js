@@ -1,3 +1,6 @@
+/* 用户管理模块 */
+const md5=require('md5')
+const {secert}=require('../config')
 const {User,Role,Group,Menu,Permission,Element,Action,File,UserGroup,UserRole}=require('../db/mysql/models')
 const {encrypt,decrypt}=require('../utils/tokenVerify')
 //分页查询
@@ -26,9 +29,25 @@ exports.createUser=async ctx=>{
         email:{type:"email",required:false},
         phone:{type:"string",format:/^0?(13|14|15|17|18)[0-9]{9}$/,required:false},
         password:{type:"string",min:6,required:false},
-        status:{type:"boolean",required:false}
+        status:{type:"boolean",required:false},
     })
-    ctx.body=(await User.create({...ctx.request.body,createdAt:new Date(),updatedAt:new Date()}))
+    let {password}=ctx.request.body;
+    password=md5(`${secert}${password}`)
+    let user=await User.create({...ctx.request.body,password,createdAt:new Date(),updatedAt:new Date()})
+    //创建的用户需要和角色关联起来 
+    //只有超级管理员和管理员有创建用户的权利，那么就针对这个关联角色
+    let {roles}=ctx.state.user;
+    if(roles.length===0) return;
+    if(roles.length===1 && roles[0].roleEncode==="superadmin"){
+        await UserRole.create({roleId:roles[0].id,userId:user.id,createdAt:new Date(),updatedAt:new Date()})
+    }else{
+        //有问题
+        for(let i=0;i<roles.length;i++){
+            await UserRole.create({roleId:roles[i].id,userId:user.id,createdAt:new Date(),updatedAt:new Date()})
+        }
+    }
+
+    ctx.body={user}
 }
 //登录
 exports.login=async ctx=>{
@@ -99,7 +118,9 @@ exports.updateUserById=async ctx=>{
             password:{type:"string",min:6,required:false},
             status:{type:"boolean",required:false}
         })
-        ctx.body=(await User.update({...ctx.request.body,updatedAt:new Date()},{where:{id}}))
+        let {password}=ctx.request.body;
+        password=md5(`${secert}${password}`)
+        ctx.body=(await User.update({...ctx.request.body,password,updatedAt:new Date()},{where:{id}}))
 }
 
 exports.removeUserById=async ctx=>{
