@@ -5,7 +5,8 @@ module.exports={
         return jwt.sign(data,secert,{expiresIn:time})
     },
     decrypt(token){
-        let {loginName,id}=jwt.verify(token,secert)
-        return {loginName,id}
+        let {loginName,id,roles}=jwt.verify(token,secert)
+        return {loginName,id,roles}
+        
     }
 }

@@ -52,6 +52,11 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'User',
+    hooks:{
+      beforeDestroy:user=>{
+        console.log('destroy userinfo',user)
+      }
+    }
   });
   return User;
 };

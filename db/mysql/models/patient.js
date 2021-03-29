@@ -59,8 +59,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     reportStatus:{
       type:DataTypes.ENUM,
-      values:[0,1,2,3],
-      defaultValue:3
+      values:['0','1','2','3'],
+        defaultValue:'3'
     },
     note:{
       type:DataTypes.STRING
