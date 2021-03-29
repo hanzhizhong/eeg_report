@@ -22,7 +22,7 @@ module.exports = {
         unique:"userIndex"
       },
       phone:{
-        type:Sequelize.INTEGER,
+        type:Sequelize.STRING,
         unique:"userIndex"
       },
       gender:{

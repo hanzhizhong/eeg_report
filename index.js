@@ -7,14 +7,15 @@ const jsonError=require('koa-json-error');
 const parameter=require('koa-parameter')
 
 const routesUrl=require('./router')
+parameter(app);
+app.use(koaBody())
 //监听请求体数据
 app.use(jsonError({
     postFormat:(e,{stack,...rest})=>{
-        return process.env.NODE_ENV==='production'?rest:{...rest}
+        return process.env.NODE_ENV==='production'?rest:{stack,...rest}
     }
 }))
-parameter(app);
-app.use(koaBody())
+
 //使用传输数据验证功能
 
 router.use(routesUrl.routes())

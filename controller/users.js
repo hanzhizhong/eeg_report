@@ -1,51 +1,51 @@
-const {User,Role,Group,Menu,Permission,Element,Action,File}=require('../db/mysql/models')
+const {User,Role,Group,Menu,Permission,Element,Action,File,UserGroup,UserRole}=require('../db/mysql/models')
 const {encrypt,decrypt}=require('../utils/tokenVerify')
 //分页查询
-exports.findByPages=async ctx=>{
-    try{
-        console.log('ttt',ctx.query)
-        ctx.body= (await User.findAll({attributes:{exclude:['password']},include:[
-            {model:Role,through:{attributes:[]}},
-            {model:Group,through:{attributes:[]}}
-        ]}))
-    }catch(err){
-        throw new Error(err)
-    }
+exports.find=async ctx=>{
+    ctx.body= (await User.findAll({attributes:{exclude:['password']},include:[
+        {model:Role,through:{attributes:[]}},
+        {model:Group,through:{attributes:[]}}
+    ]}))
 }
 //创建一个用户
 exports.createUser=async ctx=>{
-    try{
-        let {userName,password,institutionId,loginName,email,phone,gender,avatar,status,roleId,groupId}=ctx.request.body;
-        ctx.body=(await User.create({userName,password,institutionId,loginName,email,phone,gender,avatar,status,roleId,groupId}))
-    }catch(err){
-        console.log('err',创建用户信息错误)
-    }
+    ctx.verifyParams({
+        loginName:{type:"string",required:true},
+        userName:{type:"string",required:true},
+        email:{type:"email",required:false},
+        phone:{type:"string",format:/^0?(13|14|15|17|18)[0-9]{9}$/,required:false},
+        password:{type:"string",min:6,required:false},
+        status:{type:"boolean",required:false}
+    })
+        ctx.body=(await User.create({...ctx.request.body}))
 }
 //登录
 exports.login=async ctx=>{
-    try{
-        let {loginName,password}=ctx.request.body;
+    let {loginName,password}=ctx.request.body;
         let user=await User.findOne({
-            where:{loginName,password}
+            where:{loginName,password},
+            include:[
+                {model:Role,through:{attributes:[]},attributes:['roleName','roleEncode']}
+            ]
         })
+        user=JSON.parse(JSON.stringify(user))
         if(!user) ctx.throw(401,'user not exist, login first')
-        let token=encrypt({loginName,id:user.id},'1d')
+        let token=encrypt({loginName,id:user.id,roles:user.Roles},'1d')
         ctx.body={token}
-    }catch(err){
-        console.log('err',err)
-    }
 }
 
 //登录检查
 exports.checkLoginStatus=async (ctx,next)=>{
     //解码token
-    try{
-        let token=ctx.header.authorization.replace('Bearer ','')
-        let {loginName,id}=decrypt(token)
-        ctx.state.user={loginName,id}
-       await next()
-    }catch(err){
-        throw new Error(err)
+    if(ctx.url!=='/api/users/login'){
+        let token=ctx.header.authorization
+        if(!token) ctx.throw(401,'鉴权失败，请求头中没有返回token值')
+        token=token.replace('Bearer ','')
+        let {loginName,id,roles}=decrypt(token)
+        ctx.state.user={loginName,id,roles}
+        await next()
+    }else{
+        await next()
     }
 
 }
@@ -66,6 +66,44 @@ exports.getLoginUserInfo=async ctx=>{
     delete user.Roles;
     let {menus=[],elements=[],files=[]}=await matchCurUserMenus(roles)
     ctx.body={user,menus,elements,files}
+}
+
+//删改查findUserById,updateUserById,removeUserById
+exports.findUserById=async ctx=>{
+    let {id}=ctx.params
+        ctx.body=(await User.findByPk(id,{
+            attributes:{exclude:['password']},
+            include:[
+                {model:Role,through:{attributes:[]}}
+            ]
+        }))
+}
+exports.updateUserById=async ctx=>{
+    let {id}=ctx.params
+        ctx.verifyParams({
+            loginName:{type:"string",required:true},
+            userName:{type:"string",required:true},
+            email:{type:"email",required:false},
+            phone:{type:"string",format:/^0?(13|14|15|17|18)[0-9]{9}$/,required:false},
+            password:{type:"string",min:6,required:false},
+            status:{type:"boolean",required:false}
+        })
+        ctx.body=(await User.update({...ctx.request.body,updatedAt:new Date()},{where:{id}}))
+}
+
+exports.removeUserById=async ctx=>{
+    let {id}=ctx.params;
+    //删除所有的关联关系 user userrole groupuser 
+    let user=await User.findByPk(id,{include:[Role]})
+    if(!user) return ctx.throw(404,'用户不存在');
+    user=JSON.parse(JSON.stringify(user));
+    let roles=user.Roles;
+    if(roles.length===1 && roles[0].roleEncode.toLowerCase()==='superadmin'){
+        ctx.throw(412,'用户拥有超级管理员角色，不能被删除')
+        return 
+    }
+    let [a,b,c]=await Promise.all([UserRole.destroy({where:{userId:id}}),UserGroup.destroy({where:{userId:id}}),User.destroy({where:{id}})])
+    ctx.body="succuss"
 }
 //根据用户的角色匹配用户的菜单
 const matchCurUserMenus=async roles=>{

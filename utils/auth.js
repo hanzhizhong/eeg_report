@@ -1,11 +1,16 @@
-const AccessControl=require('accesscontrol')
+const ac=require('./rbac')
 
-
-//从数据库中获取用户角色-资源-权限
-
-const {Permission,Role}=require('../db/mysql/models')
-
-
-
-const ac=new AccessControl();
-
+module.exports=function(action,resource){
+    return async (ctx,next)=>{
+        let {roles}=ctx.state.user;
+        let grant;
+        for(let i=0;i<roles.length;i++){
+            grant=ac.can(roles[i].roleEncode)[action](resource).granted 
+            if(grant){
+                break; 
+            }
+        }
+        grant?await next():ctx.throw(401,'当前用户没有此操作的权限')
+        
+    }
+}

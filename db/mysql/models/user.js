@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       unique:"userIndex"
     },
     phone:{
-      type:DataTypes.INTEGER,
+      type:DataTypes.STRING,
       unique:"userIndex"
     },
     gender:{
@@ -52,6 +52,11 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'User',
+    hooks:{
+      beforeDestroy:user=>{
+        console.log('destroy userinfo',user)
+      }
+    }
   });
   return User;
 };
