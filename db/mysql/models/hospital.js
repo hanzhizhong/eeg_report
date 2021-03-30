@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Hospital.belongsToMany(models.User,{through:"HospitalUser"})
-      
+      Hospital.belongsToMany(models.Group,{through:"HospitalGroup"})
     }
   };
   Hospital.init({

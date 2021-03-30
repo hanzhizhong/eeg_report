@@ -14,7 +14,8 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   HospitalGroup.init({
-    hospitalId: DataTypes.INTEGER
+    hospitalId: DataTypes.INTEGER,
+    groupId:DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'HospitalGroup',

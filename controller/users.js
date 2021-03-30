@@ -52,18 +52,11 @@ exports.createUser=async ctx=>{
         status:{type:"boolean",required:false},
         hospitalId:{type:"array",required:true,itemType:"int"}
     })
-    let {Roles}=await userInfo(ctx)
-    let roles=Roles.map(itm=>{
-        return itm.roleEncode
-    })
+    //验证操作权限
+    await operateAccessValidate(ctx,'该权限下创建的用户关联的医院不能为空')
     let {password,hospitalId=[]}=ctx.request.body;
     password=md5(`${secert}${password}`)
-    //创建的用户需要和机构关联起来 
-    //只有超级管理员和管理员有创建用户的权利，那么就针对这个关联
-    if(!roles.includes('superadmin') && hospitalId.length===0){
-        ctx.throw(422,'该权限下创建的用户关联的医院不能为空')
-        return
-    }
+    
     let user=await User.create({...ctx.request.body,password,createdAt:new Date(),updatedAt:new Date()})
     for(let i=0;i<hospitalId.length;i++){
         await HospitalUser.create({userId:user.id,hospitalId:hospitalId[i]})
@@ -112,6 +105,23 @@ const userInfo=async ctx=>{
     user=JSON.parse(JSON.stringify(user));
     return user;
 }
+//导出当前登录的用户信息
+exports.userInfo=userInfo;
+//机构和角色权限关联判断当前用户是否能操作
+const operateAccessValidate=async (ctx,msg)=>{
+    let {Roles}=await userInfo(ctx)
+    let roles=Roles.map(itm=>{
+        return itm.roleEncode
+    })
+    let {hospitalId=[]}=ctx.request.body;
+    //创建的用户需要和机构关联起来 
+    //只有超级管理员和管理员有创建用户的权利，那么就针对这个关联
+    if(!roles.includes('superadmin') && hospitalId.length===0){
+        ctx.throw(422,`${msg}`)
+        return
+    }
+}
+exports.operateAccessValidate=operateAccessValidate;
 exports.getLoginUserInfo=async ctx=>{
     let user=await userInfo(ctx)
     let roles=user.Roles;
@@ -141,9 +151,17 @@ exports.updateUserById=async ctx=>{
             status:{type:"boolean",required:false},
             hospitalId:{type:"array",itemType:"int",required:true}
         })
+        //验证操作权限
+        await operateAccessValidate(ctx,'该权限下用户关联的医院不能为空')
         let {password}=ctx.request.body;
         password=md5(`${secert}${password}`)
-        ctx.body=(await User.update({...ctx.request.body,password,updatedAt:new Date()},{where:{id}}))
+        
+        let user=await User.update({...ctx.request.body,password,updatedAt:new Date()},{where:{id}})
+        for(let i=0;i<hospitalId.length;i++){
+            await HospitalUser.update({hospitalId:hospitalId[i]},{where:{userId:user.id}})
+        }
+        ctx.body={message:"success",status:200}
+    
 }
 
 exports.removeUserById=async ctx=>{
