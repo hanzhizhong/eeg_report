@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       User.belongsToMany(models.Group,{through:"UserGroup"});
       User.belongsToMany(models.Role,{through:"UserRole"})
+      User.belongsToMany(models.Hospital,{through:"HospitalUser"})
     }
   };
   User.init({

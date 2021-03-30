@@ -1,12 +1,13 @@
 const Router=require('koa-router')
-const router=new Router({prefix:'/group'})
+const router=new Router({prefix:'/groups'})
+//角色权限鉴定
+const accessGrant=require('../utils/auth')
+const {find,createGroup,updateGroupById,findGroupById,removeGroupById}=require('../controller/groups')
 
-/* const {find,create,updateGroupById,findGroupById,removeGroupById}=require('../controller/groups')
-
-router.get('/',find)
-router.post('/',create)
-router.patch('/:id',updateGroupById)
-router.get('/:id',findGroupById)
-router.delete('/:id',removeGroupById) */
+router.get('/',accessGrant('readOwn','group'),find)
+router.post('/',accessGrant('createOwn','group'),createGroup)
+router.patch('/:id',accessGrant('updateOwn','group'),updateGroupById)
+router.get('/:id',accessGrant('readOwn','group'),findGroupById)
+router.delete('/:id',accessGrant('deleteOwn','group'),removeGroupById)
 
 module.exports=router;
