@@ -8,11 +8,11 @@ const {find,createUser,login,getLoginUserInfo,findUserById,updateUserById,remove
 
 router.post('/login',login)
 router.get('/me',getLoginUserInfo)
-router.get('/',accessGrant('readOwn','user'),find)
-router.post('/',accessGrant('createOwn','user'),createUser)
-router.get('/:id',accessGrant('readOwn','user'),findUserById)
-router.patch('/:id',accessGrant('updateOwn','user'),updateUserById)
-router.delete('/:id',accessGrant('deleteOwn','user'),removeUserById)
+router.get('/',accessGrant('readOwn','users'),find)
+router.post('/',accessGrant('createOwn','users'),createUser)
+router.get('/:id',accessGrant('readOwn','users'),findUserById)
+router.patch('/:id',accessGrant('updateOwn','users'),updateUserById)
+router.delete('/:id',accessGrant('deleteOwn','users'),removeUserById)
 
 
 

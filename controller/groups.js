@@ -21,16 +21,28 @@ exports.find=async ctx=>{
         include=[
             {
                 model:Hospital,through:{attributes:[]},where:{
-                    id:{[Sequelize.Op.in]:hospitals}
+                    [Sequelize.Op.or]:{
+                        id:{
+                            [Sequelize.Op.in]:hospitals,
+                        },
+                        parentHospitalId:{
+                            [Sequelize.Op.in]:hospitals,
+                        }
+                    }
                 }
             }
         ]
     }
-    let {pageIndex=1,pageSize=10}=ctx.query
+    let {pageIndex=1,pageSize=10,fields=''}=ctx.query
     pageIndex=Math.max(pageIndex,1)
     pageSize=Math.max(pageSize,10)
     let result=await Group.findAndCountAll({
         include,
+        where:{
+            groupName:{
+                [Sequelize.Op.like]:`%${fields}%`
+            }
+        },
         limit:pageSize,
         offset:pageIndex-1
     })
@@ -48,6 +60,7 @@ exports.createGroup=async ctx=>{
     })
     //验证操作权限
     await operateAccessValidate(ctx,'该权限下用户组关联的医院不能为空')
+    let {hospitalId=[]}=ctx.request.body;
     let group=await Group.create({...ctx.request.body,createdAt:new Date(),updatedAt:new Date()})
     for(let i=0;i<hospitalId.length;i++){
         await HospitalGroup.create({groupId:group.id,hospitalId:hospitalId[i]})
@@ -76,7 +89,7 @@ exports.updateGroupById=async ctx=>{
     //验证操作权限
     await operateAccessValidate(ctx,'该权限下用户组关联的医院不能为空')
     let {id}=ctx.params;
-    
+    let {hospitalId}=ctx.request.body;
     let group=await Group.update({...ctx.request.body,updatedAt:new Date()},{where:{id}})
     for(let i=0;i<hospitalId.length;i++){
         await HospitalGroup.update({hospitalId:hospitalId[i]},{where:{groupId:group.id}})

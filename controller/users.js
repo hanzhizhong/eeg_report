@@ -23,17 +23,41 @@ exports.find=async ctx=>{
         include=[
             {
                 model:Hospital,through:{attributes:[]},where:{
-                    id:{[Sequelize.Op.in]:hospitals}
+                    [Sequelize.Op.or]:{
+                        id:{
+                            [Sequelize.Op.in]:hospitals,
+                        },
+                        parentHospitalId:{
+                            [Sequelize.Op.in]:hospitals,
+                        }
+                    }
                 }
             }
         ]
     }
-    let {pageIndex=1,pageSize=10}=ctx.query
+    let {pageIndex=1,pageSize=10,fields=''}=ctx.query
     pageIndex=Math.max(pageIndex,1)
     pageSize=Math.max(pageSize,10)
+
     let result=await User.findAndCountAll({
         attributes:{exclude:['password']},
         include,
+        where:{
+            [Sequelize.Op.or]:{
+                loginName:{
+                    [Sequelize.Op.like]:`%${fields}%`
+                },
+                userName:{
+                    [Sequelize.Op.like]:`%${fields}%`
+                },
+                email:{
+                    [Sequelize.Op.like]:`%${fields}%`
+                },
+                phone:{
+                    [Sequelize.Op.like]:`%${fields}%`
+                },
+            }
+        },
         limit:pageSize,
         offset:pageIndex-1
     })
@@ -66,7 +90,12 @@ exports.createUser=async ctx=>{
 }
 //登录
 exports.login=async ctx=>{
+    ctx.verifyParams({
+        loginName:{type:"string",required:true},
+        password:{type:"string",required:true,min:6}
+    })
     let {loginName,password}=ctx.request.body;
+        password=md5(`${secert}${password}`)
         let user=await User.findOne({
             where:{loginName,password}
         })
