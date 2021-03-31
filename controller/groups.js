@@ -1,5 +1,5 @@
 /* 用户组管理模块 */
-const {Sequelize,Group,UserGroup,UserRole,Hospital,HospitalGroup}=require('../db/mysql/models')
+const {Sequelize,Group,GroupRole,Role,GroupUser,Hospital,HospitalGroup}=require('../db/mysql/models')
 const {userInfo,operateAccessValidate}=require('./users')
 //分页查询
 exports.find=async ctx=>{
@@ -70,13 +70,14 @@ exports.createGroup=async ctx=>{
 //删改查findGroupById,updateGroupById,removeGroupById
 exports.findGroupById=async ctx=>{
     let {id}=ctx.params
-    let groups=await Group.findByPk(id,{
+    let group=await Group.findByPk(id,{
         include:[
             {model:Hospital,through:{attributes:[]}} 
         ]
     })
-    groups=JSON.parse(JSON.stringify(groups))
-    ctx.body={groups}
+    group=JSON.parse(JSON.stringify(groups))
+    ctx.body={group}
+    return group;
     
 }
 exports.updateGroupById=async ctx=>{
@@ -84,15 +85,36 @@ exports.updateGroupById=async ctx=>{
         groupName:{type:"string",required:true},
         parentGroupId:{type:"int",required:false},
         status:{type:"boolean",required:false,default:1},
-        hospitalId:{type:"array",required:true,itemType:"int"}
+        hospitalsId:{type:"array",required:true,itemType:"int"}
     })
     //验证操作权限
     await operateAccessValidate(ctx,'该权限下用户组关联的医院不能为空')
     let {id}=ctx.params;
-    let {hospitalId}=ctx.request.body;
-    let group=await Group.update({...ctx.request.body,updatedAt:new Date()},{where:{id}})
-    for(let i=0;i<hospitalId.length;i++){
-        await HospitalGroup.update({hospitalId:hospitalId[i]},{where:{groupId:group.id}})
+    let group=await Group.findByPk(id,{
+        include:[
+            {model:Hospital,through:{attributes:[]}}
+        ]
+    })
+    if(!group) return ctx.throw(404,'用户组不存在')
+    group=JSON.parse(JSON.stringify(group))
+    let groupHos=group.Hospitals.map(itm=>{
+        return itm.id;
+    })
+    let {hospitalsId=[]}=ctx.request.body;
+    console.log('mmmmm',hospitalsId)
+    let [ret]=await Group.update({...ctx.request.body,updatedAt:new Date()},{where:{id}})
+    console.log('ttt',ret)
+    if(!ret) return ctx.throw(412,'更新失败')
+    for(let i=0;i<hospitalsId.length;i++){
+        if(groupHos.includes(hospitalsId[i])){
+            let ret_update=await HospitalGroup.update({hospitalId:hospitalsId[i],updatedAt:new Date()},{where:{groupId:id}})
+            console.log('update',ret_update)
+        }else{
+            console.log('ss')
+            let ret_create=await HospitalGroup.create({hospitalId:hospitalsId[i],groupId:id,createdAt:new Date(),updatedAt:new Date()})
+            console.log('create',ret_create)
+        }
+        
     }
     ctx.body={message:"success",status:200}
 }
@@ -101,13 +123,11 @@ exports.removeGroupById=async ctx=>{
     let {id}=ctx.params;
     //删除所有的关联关系 group grouprole groupuser hospitalgroup
     let group=await Group.findByPk(id,{include:[Role]})
-    if(!user) return ctx.throw(404,'用户不存在');
-    user=JSON.parse(JSON.stringify(user));
-    let roles=user.Roles;
-    if(roles.length===1 && roles[0].roleEncode.toLowerCase()==='superadmin'){
-        ctx.throw(412,'用户拥有超级管理员角色，不能被删除')
-        return 
-    }
-    let [a,b,c,d]=await Promise.all([UserRole.destroy({where:{userId:id}}),UserGroup.destroy({where:{userId:id}}),User.destroy({where:{id}}),HospitalUser.destroy({where:{userId:id}})])
+    if(!group) return ctx.throw(404,'用户组不存在');
+    group=JSON.parse(JSON.stringify(group));
+    let roles=group.Roles;
+    console.log('roles',roles)
+    
+    let [a,b,c,d]=await Promise.all([Group.destroy({where:{id}}),GroupRole.destroy({where:{groupId:group.id}}),GroupUser.destroy({where:{groupId:group.id}}),HospitalGroup.destroy({where:{groupId:group.id}})])
     ctx.body={message:"success",status:200}
 }

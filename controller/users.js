@@ -182,7 +182,7 @@ exports.updateUserById=async ctx=>{
         })
         //验证操作权限
         await operateAccessValidate(ctx,'该权限下用户关联的医院不能为空')
-        let {password}=ctx.request.body;
+        let {password,hospitalId=[]}=ctx.request.body;
         password=md5(`${secert}${password}`)
         
         let user=await User.update({...ctx.request.body,password,updatedAt:new Date()},{where:{id}})
