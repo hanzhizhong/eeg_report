@@ -28,6 +28,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull:false,
       defaultValue:true
     },
+    createBy:{
+      type:DataTypes.INTEGER,
+      allowNull:false
+    }
   }, {
     sequelize,
     modelName: 'Group',

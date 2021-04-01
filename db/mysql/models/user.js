@@ -50,6 +50,10 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.BOOLEAN,
       allowNull:false,
       defaultValue:true
+    },
+    createBy:{
+      type:DataTypes.INTEGER,
+      allowNull:false
     }
   }, {
     sequelize,
