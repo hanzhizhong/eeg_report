@@ -67,7 +67,7 @@ const login=async ctx=>{
             where:{loginName,password}
         })
         user=JSON.parse(JSON.stringify(user))
-        if(!user) ctx.throw(401,'user not exist, login first')
+        if(!user) ctx.throw(401,'用户名或密码不正确')
         if(!user.status) return ctx.throw(403,'用户被禁用,联系管理员解禁')
         let token=encrypt({loginName,id:user.id},'1d')
         ctx.body={token}
