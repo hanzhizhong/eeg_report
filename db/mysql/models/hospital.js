@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Hospital.belongsToMany(models.User,{through:"HospitalUser"})
       Hospital.belongsToMany(models.Group,{through:"HospitalGroup"})
+      Hospital.hasMany(Hospital,{foreignKey:"parentHospitalId"})
     }
   };
   Hospital.init({

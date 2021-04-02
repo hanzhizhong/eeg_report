@@ -36,6 +36,13 @@ class Groups{
         group=await Group.create({...ctx.request.body,createBy,createdAt:new Date(),updatedAt:new Date()})
         ctx.body=group
     }
+    //检验用户组是否已经存在
+    async checkGroupExist(ctx,next){
+        let {id}=ctx.params;
+        let group=await Group.findByPk(id)
+        if(!group) return ctx.throw(404,'用户组不存在')
+        await next()
+    }
     //删改查findGroupById,updateGroupById,removeGroupById
     async findGroupById(ctx){
         let {id}=ctx.params
@@ -50,22 +57,18 @@ class Groups{
             status:{type:"boolean",required:false,default:true}
         })
         let {id}=ctx.params;
-        let group=await Group.findByPk(id)
-        if(!group) return ctx.throw(404,'用户组不存在')
         let {id:createBy}=ctx.state.user
         group=JSON.parse(JSON.stringify(group))
-        await Group.update({...ctx.request.body,createBy,updatedAt:new Date()},{where:{id}})
-        ctx.body={message:"success",status:200}
+        group=await Group.update({...ctx.request.body,createBy,updatedAt:new Date()},{where:{id}})
+        ctx.body=group;
     }
 
     async removeGroupById(ctx){
         let {id}=ctx.params;
         //删除所有的关联关系 group grouprole groupuser hospitalgroup
-        let group=await Group.findByPk(id,{include:[Role]})
-        if(!group) return ctx.throw(404,'用户组不存在');
         group=JSON.parse(JSON.stringify(group));
         await Promise.all([Group.destroy({where:{id}}),GroupRole.destroy({where:{groupId:group.id}}),GroupUser.destroy({where:{groupId:group.id}}),HospitalGroup.destroy({where:{groupId:group.id}})])
-        ctx.body={message:"success",status:200}
+        ctx.status=204
     }
 }
 

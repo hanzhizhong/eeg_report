@@ -1,11 +1,13 @@
 const Koa=require('koa')
 const app=new Koa()
+const fs=require('fs')
+const path=require('path')
 const Router=require('koa-router')
 const router=new Router()
 const koaBody=require('koa-body')
 const jsonError=require('koa-json-error');
 const parameter=require('koa-parameter')
-
+const morgan=require('koa-morgan')
 const routesUrl=require('./router')
 parameter(app);
 app.use(koaBody())
@@ -15,6 +17,8 @@ app.use(jsonError({
         return process.env.NODE_ENV==='production'?rest:{stack,...rest}
     }
 }))
+let accessLogStream=fs.createWriteStream(path.join(__dirname,'logs/access.log'),{flags:"a"})
+app.use(morgan('combined',{stream:accessLogStream}))
 
 router.use(routesUrl.routes())
 //启动路由

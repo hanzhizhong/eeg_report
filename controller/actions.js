@@ -40,6 +40,13 @@ class Actions{
         action=await Action.create({...ctx.request.body,actionEncode,createdAt:new Date(),updatedAt:new Date()})
         ctx.body=action;
     }
+    //检验操作功能是否存在
+    async checkActionExist(ctx,next){
+        let {id}=ctx.params;
+        let action=await Action.findByPk(id)
+        if(!action) return ctx.throw(404,'当前功能操作不存在')
+        await next()
+    }
     async findActionById(ctx){
         let {id}=ctx.params;
         let action=await Action.findByPk(id)
@@ -54,17 +61,14 @@ class Actions{
         let {id}=ctx.params;
         let {actionEncode}=ctx.request.body;
         actionEncode=actionEncode.toUpperCase()
-        let action=await Action.findByPk(id)
-        if(!action) return ctx.throw(404,'当前功能操作不存在')
         action=await Action.update({...ctx.request.body,actionEncode,updatedAt:new Date()},{where:{id}})
-        ctx.body={message:"success",status:200}
+        ctx.body=action;
     }
     async removeActionById(ctx){
         let {id}=ctx.params;
-        let action=await Action.findByPk(id)
-        if(!action) return ctx.throw(404,'当前功能操作不存在')
+        //将关联的权限中的actionId也删掉
         await Promise.all([Action.destroy({where:{id}}),Permission.destroy({where:{actionId:id}})])
-        ctx.body={message:"success",status:200}
+        ctx.status=204
     }
 }
 module.exports=new Actions()

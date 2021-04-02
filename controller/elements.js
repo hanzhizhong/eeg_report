@@ -16,9 +16,9 @@ class Elements{
             limit:pageSize,
             offset:pageIndex-1
         })
-        let {count,rows:Elements}=JSON.parse(JSON.stringify(result))
+        let {count,rows:elements}=JSON.parse(JSON.stringify(result))
 
-        ctx.body= {count,Elements,pageIndex,pageSize}
+        ctx.body= {count,elements,pageIndex,pageSize}
     }
     async createElement(ctx){
         ctx.verifyParams({
