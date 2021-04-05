@@ -11,6 +11,9 @@ module.exports = {
       menuName: {
         type: Sequelize.STRING
       },
+      menuUrl:{
+        type:Sequelize.STRING
+      },
       parentMenuId:{
         type:Sequelize.INTEGER
       },

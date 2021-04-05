@@ -13,13 +13,19 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Hospital.belongsToMany(models.User,{through:"HospitalUser"})
       Hospital.belongsToMany(models.Group,{through:"HospitalGroup"})
-      Hospital.hasMany(Hospital,{foreignKey:"parentHospitalId"})
+      Hospital.belongsToMany(models.Meeting,{through:"HospitalMeeting"})
+      Hospital.hasMany(models.Hospital,{foreignKey:"parentHospitalId"})
     }
   };
   Hospital.init({
     hospitalName: {
       type:DataTypes.STRING,
       unique:"hospitalIndex" 
+    },
+    level:{
+      type:DataTypes.ENUM,
+      values:['省级','市级','地级'],
+      defaultValue:"省级"
     },
     parentHospitalId:{
       type:DataTypes.INTEGER 

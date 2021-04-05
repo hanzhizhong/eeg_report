@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       Group.belongsToMany(models.Role,{through:"GroupRole"})
       Group.belongsToMany(models.User,{through:"UserGroup"})
       Group.belongsToMany(models.Hospital,{through:"HospitalGroup"})
+      Group.hasMany(models.Group,{foreignKey:"parentGroupId"})
     }
   };
   Group.init({

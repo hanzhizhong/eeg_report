@@ -53,6 +53,9 @@ module.exports = {
       operateDoctorId:{
         type:Sequelize.INTEGER
       },
+      hospitalId:{
+        type:Sequelize.INTEGER
+      },
       reportStatus:{
         type:Sequelize.ENUM,
         values:['0','1','2','3'],

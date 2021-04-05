@@ -12,7 +12,7 @@ module.exports = {
      * }], {});
     */
     await queryInterface.bulkInsert("Hospitals",[
-      {hospitalName:"上海诺诚",parentHospitalId:null,status:true,address:"南沙路68号",introduction:"sdfadfadfa",picture:"",hospitalEncode:"SHANGHAINOUCHENG",createdAt:new Date(),updatedAt:new Date()}
+      {hospitalName:"上海诺诚",level:"省级",parentHospitalId:null,status:true,address:"南沙路68号",introduction:"sdfadfadfa",picture:"",hospitalEncode:"SHANGHAINOUCHENG",createdAt:new Date(),updatedAt:new Date()}
     ])
   },
 

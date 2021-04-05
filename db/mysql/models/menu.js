@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       //Menu.belongsTo(models.Permission,{foreignKey:"id"});
+      Menu.hasMany(models.Menu,{foreignKey:"parentMenuId"})
     }
   };
   Menu.init({
@@ -20,6 +21,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     parentMenuId:{
       type:DataTypes.INTEGER
+    },
+    menuUrl:{
+      type:DataTypes.STRING 
     },
     status:{
       type:DataTypes.BOOLEAN,
