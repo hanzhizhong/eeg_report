@@ -10,19 +10,64 @@ class Permissions{
         ctx.body={menus,elements,files}
     }
     async createPermission(ctx){
-        ctx.verifyParams({
-            typeName:{type:"enum",required:true,values:['MENU','ELEMENT','FILE']},
-            typeId:{type:"int",required:true,allowEmpty:false},
-            actionId:{type:"int",required:true,allowEmpty:true}
+        //使用批量添加的方式
+        let arr=ctx.request.body.map(itm=>{
+            if(!['MENU','ELEMENT','FILE'].includes(itm.typeName)){
+                return ctx.throw(422,'typeName参数错误')
+            }else if(!itm.typeId || typeof itm.typeId!=='number'){
+                return ctx.throw(422,'typeId不为空且为int')
+            }else if(itm.actionId && typeof itm.actionId!=='number'){
+                return ctx.throw(422,'actionId为int')
+            }
+            itm.actionId=itm.actionId||null;
+            itm.createdAt=new Date();
+            itm.updatedAt=new Date();
+            return itm;
         })
-
-        let tmp=await Permission.create({...ctx.request.body,createdAt:new Date(),updatedAt:new Date()})
+        let tmp=[]
+        for(let i=0;i<arr.length;i++){
+            let per=await Permission.findOne({
+                where:{
+                    typeName:arr[i].typeName,
+                    typeId:arr[i].typeId,
+                    actionId:arr[i].actionId
+                }
+            })
+            if(per) return ctx.throw(409,`当前数据类型${arr[i].typeName}已经存了`)
+            per=await Permission.create(arr[i])
+            tmp=[per,...tmp]
+        }
         ctx.body=tmp;
     }
+    //根据菜单id获取对应的actions
+    async findActionByMenuId(ctx){
+        let {id:typeId}=ctx.params;
+        let ret=await matchActionsById(typeId,'MENU')
+        ctx.body=ret;
+    }
+    async findActionByFileId(ctx){
+        let {id:typeId}=ctx.params;
+        let ret=await matchActionsById(typeId,'FILE')
+        ctx.body=ret;
+    }
+    async findActionByElementId(ctx){
+        let {id:typeId}=ctx.params;
+        let ret=await matchActionsById(typeId,'ELEMENT')
+        ctx.body=ret;
+    }
     
-
+    
 }
-
+//根据id值获取对应的actions
+const matchActionsById=async (id,type)=>{
+    let tmp=await Permission.findAll({
+        where:{
+            typeName:type,
+            typeId:id
+        }
+    })
+    return tmp;
+}
 const handleRowsData=async rows=>{
     let menu=new Map(),
     element=new Map(),
