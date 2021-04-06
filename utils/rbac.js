@@ -57,6 +57,10 @@ const grantList = [
     {role: 'superadmin',resource: 'groups',action: 'update:any'},
     {role: 'superadmin',resource: 'groups',action: 'create:any'},
     {role: 'superadmin',resource: 'groups',action: 'delete:any'},
+    {role: 'superadmin',resource: 'permissions',action: 'read:any'},
+    {role: 'superadmin',resource: 'permissions',action: 'update:any'},
+    {role: 'superadmin',resource: 'permissions',action: 'create:any'},
+    {role: 'superadmin',resource: 'permissions',action: 'delete:any'},
 ]
 
 module.exports=new AccessControl(grantList);

@@ -6,7 +6,7 @@ class Patients{
         hospitals=hospitals.map(itm=>{
             return itm.id;
         })
-        let {pageIndex=1,pageSize=10,fields='',createdAt=''}=ctx.query;
+        let {pageIndex=1,pageSize=10,fields=''}=ctx.query;
         pageIndex=Math.max(pageIndex,1)
         pageSize=Math.max(pageSize,10)
         let patients=await Patient.findAndCountAll({
@@ -40,6 +40,7 @@ class Patients{
             diagnosticianId:{type:"int",required:false},
             applyDoctorId:{type:"int",required:false},
             operateDoctorId:{type:"int",required:false},
+            hospitalId:{type:"int",required:true},
             reportStatus:{type:"enum",values:[0,1,2,3,4],required:false}
         })
         let {patientName,eegNo}=ctx.request.body;
@@ -69,6 +70,7 @@ class Patients{
             diagnosticianId:{type:"int",required:false},
             applyDoctorId:{type:"int",required:false},
             operateDoctorId:{type:"int",required:false},
+            hospitalId:{type:"int",required:true},
             reportStatus:{type:"enum",values:[0,1,2,3,4],required:false}
         })
         let {id}=ctx.params;
@@ -90,14 +92,32 @@ class Patients{
     async findPatientFilesById(ctx){
         let {id}=ctx.params;
         let files=await File.findAll({
-            attributes:{exclude:['Patients']},
             include:[
-                {model:Patient,through:{attributes:[]},where:{
+                {model:Patient,attributes:[],where:{
                     id
                 }}
             ]
         })
         ctx.body=files;
+    }
+    //注意患者的文件和当前登录用户能够操作查看（下载，导出、打印等）的文件区别
+    async patientFilesUpdate(ctx){
+        let {patientId,fileId}=ctx.params
+        let tmp=await PatientFile.findOne({where:{patientId,fileId}})
+        if(!tmp) {
+            tmp=await PatientFile.create({PatientId:patientId,FileId:fileId,createdAt:new Date(),updatedAt:new Date()})
+            ctx.body=tmp;
+
+        }else{
+            ctx.throw(409,'患者报告已经存在')
+        }
+    }
+    async patientFilesRemove(ctx){
+        let {patientId,fileId}=ctx.params;
+        let tmp=await PatientFile.findOne({where:{patientId,fileId}})
+        if(!tmp) return ctx.throw(404,'患者报告不存在')
+        await PatientFile.destroy({where:{patientId,fileId}})
+        ctx.status=204
     }
 }
 

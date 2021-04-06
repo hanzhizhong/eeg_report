@@ -1,5 +1,5 @@
 const Router=require('koa-router')
-const { find,createPatient,checkPatientExist,findPatientById,updatePatientById,removePatientById,findPatientFilesById } = require('../controller/paitents')
+const { find,createPatient,checkPatientExist,findPatientById,updatePatientById,removePatientById,findPatientFilesById,patientFilesUpdate ,patientFilesRemove} = require('../controller/paitents')
 const router=new Router({prefix:"/patients"})
 
 router.get('/',find)
@@ -8,4 +8,6 @@ router.get('/:id',checkPatientExist,findPatientById)
 router.patch('/:id',checkPatientExist,updatePatientById)
 router.delete('/:id',checkPatientExist,removePatientById)
 router.get('/:id/files',checkPatientExist,findPatientFilesById)
+router.patch('/:patientId/files/:fileId',patientFilesUpdate)
+router.delete('/:patientId/files/:fileId',patientFilesRemove)
 module.exports=router;
