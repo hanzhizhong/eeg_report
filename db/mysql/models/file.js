@@ -12,6 +12,8 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       File.belongsToMany(models.Patient,{through:"PatientFile"});
+      File.belongsTo(models.Hospital,{foreignKey:"hospitalId"});
+      File.belongsTo(models.User,{foreignKey:"uploadUserId"})
     }
   };
   File.init({
@@ -26,6 +28,9 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.INTEGER
     },
     fileSize:{
+      type:DataTypes.INTEGER
+    },
+    hospitalId:{
       type:DataTypes.INTEGER
     },
     uploadUserId:{

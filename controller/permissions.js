@@ -11,8 +11,61 @@ class Permissions{
     }
     async createPermission(ctx){
         //使用批量添加的方式
-        let arr=ctx.request.body.map(itm=>{
-            if(!['MENU','ELEMENT','FILE'].includes(itm.typeName)){
+        let arr=ctx.state.resources||[]
+        let ret=await Permission.bulkCreate([...arr])
+        ctx.body=ret;
+    }
+    async removePermissionById(ctx){
+        let {typeName,typeId}=ctx.params;
+        typeName=typeName.toUpperCase()
+        await Permission.destroy({where:{
+            typeName,
+            typeId
+        }})
+        ctx.status=204
+    }
+    //根据typeName和typeid获取对应的actions
+    async findActionByTypeNameId(ctx){
+        let {typeName,typeId}=ctx.params;
+        typeName=typeName.toUpperCase()
+        let ret=await matchActionsById(typeId,typeName)
+        ctx.body=ret;
+    }
+    async changeActionsByTypeNameId(ctx){
+        let arr=[...ctx.request.body]
+        for(let i=0;i<arr.length;i++){
+            if(arr[i] && typeof arr[i]!=='number'){
+                return ctx.throw(422,'actionId为数字类型')
+            }
+            let action=await Action.findOne({
+                where:{id:arr[i]}
+            })
+            if(!action) return ctx.throw(404,`id为${arr[i]}的功能操作不存在`)
+        }
+        //先删除原来存在的，创建新的数据
+        let {typeName,typeId}=ctx.params;
+        typeName=typeName.toUpperCase()
+        await Permission.destroy({where:{
+            typeName,
+            typeId
+        }})
+        arr=arr.map(itm=>{
+            let obj={}
+            obj.typeName=typeName,
+            obj.typeId=typeId,
+            obj.actionId=itm;
+            obj.createdAt=new Date();
+            obj.updatedAt=new Date()
+            return obj;
+        })
+        let tmp=await Permission.bulkCreate(arr)
+        ctx.body=tmp;
+    }
+    //检验提交的资源是否已经存在
+    async checkResourcesExist(ctx,next){
+        let arr=[...ctx.request.body]
+        arr=arr.map(itm=>{
+            if(!['MENU','ELEMENT','FILE'].includes(itm.typeName.toUpperCase())){
                 return ctx.throw(422,'typeName参数错误')
             }else if(!itm.typeId || typeof itm.typeId!=='number'){
                 return ctx.throw(422,'typeId不为空且为int')
@@ -24,7 +77,6 @@ class Permissions{
             itm.updatedAt=new Date();
             return itm;
         })
-        let tmp=[]
         for(let i=0;i<arr.length;i++){
             let per=await Permission.findOne({
                 where:{
@@ -34,29 +86,24 @@ class Permissions{
                 }
             })
             if(per) return ctx.throw(409,`当前数据类型${arr[i].typeName}已经存了`)
-            per=await Permission.create(arr[i])
-            tmp=[per,...tmp]
         }
-        ctx.body=tmp;
+        ctx.state.resources=arr;
+        await next()
+    }    
+    //校验permission的id是否存在
+    async checkPermissionExist(ctx,next){
+        let {typeName,typeId}=ctx.params;
+        typeName=typeName.toUpperCase()
+        let per=await Permission.findAll({
+            where:{
+                typeName,
+                typeId
+            }
+        })
+        console.log('erp',per)
+        if(per.length===0) return ctx.throw(404,'当前权限不存在')
+        await next()
     }
-    //根据菜单id获取对应的actions
-    async findActionByMenuId(ctx){
-        let {id:typeId}=ctx.params;
-        let ret=await matchActionsById(typeId,'MENU')
-        ctx.body=ret;
-    }
-    async findActionByFileId(ctx){
-        let {id:typeId}=ctx.params;
-        let ret=await matchActionsById(typeId,'FILE')
-        ctx.body=ret;
-    }
-    async findActionByElementId(ctx){
-        let {id:typeId}=ctx.params;
-        let ret=await matchActionsById(typeId,'ELEMENT')
-        ctx.body=ret;
-    }
-    
-    
 }
 //根据id值获取对应的actions
 const matchActionsById=async (id,type)=>{

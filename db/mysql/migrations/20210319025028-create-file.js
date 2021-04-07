@@ -21,6 +21,9 @@ module.exports = {
       fileSize:{
         type:Sequelize.INTEGER
       },
+      hospitalId:{
+        type:Sequelize.INTEGER
+      },
       uploadUserId:{
         type:Sequelize.INTEGER
       },
