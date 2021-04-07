@@ -30,17 +30,20 @@ class Files{
         })
         ctx.body=files;
     }
-    async createFile(ctx){
+    async createFolder(ctx){
        ctx.verifyParams({
-        //    fileName:{type:"string",required:true},
-           fileUrl:{type:"url",allowEmpty:true,required:false},
-           parentFileId:{type:"int",required:false},
-           uploadUserId:{type:"int",required:true},
-           hospitalId:{type:"int",required:true},
-           status:{type:"boolean",required:false,default:true}
+            fileName:{type:"string",required:true},
+            parentFileId:{type:"int",required:false},
+            uploadUserId:{type:"int",required:true},
+            hospitalId:{type:"int",required:true},
+            status:{type:"boolean",required:false,default:true}
        })
-        
-       ctx.body={file:ctx.request.files,msg:ctx.request.body}; 
+        let folder=await File.findOne({
+            where:{
+                fileName
+            }
+        })
+       ctx.body
     }
     async findFileById(ctx){
 
