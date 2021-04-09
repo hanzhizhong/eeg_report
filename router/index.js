@@ -13,6 +13,7 @@ const menus=require('./menus')
 const patients=require('./patients')
 const permissions=require('./permissions')
 const files=require('./files')
+const roles=require('./roles')
 
 router.use(checkLoginStatus)
 router.use(users.routes())
@@ -25,5 +26,6 @@ router.use(menus.routes())
 router.use(patients.routes())
 router.use(permissions.routes())
 router.use(files.routes())
+router.use(roles.routes())
 
 module.exports=router;

@@ -22,8 +22,10 @@ module.exports = (sequelize, DataTypes) => {
       unique:true 
     },
     roleEncode:{
-      type:DataTypes.STRING,
-      unique:true
+      type:DataTypes.ENUM,
+      values:["superadmin","admin","user","guest"],
+      defaultValue:"user",
+      allowNull:false
     },
     parentRoleId:{
       type:DataTypes.INTEGER
@@ -33,6 +35,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull:false,
       defaultValue:true
     },
+    createdId:{
+      type:DataTypes.INTEGER,
+      allowNull:false
+    },
+    level:{
+      type:DataTypes.STRING,
+      allowNull:false
+    }
   }, {
     sequelize,
     modelName: 'Role',

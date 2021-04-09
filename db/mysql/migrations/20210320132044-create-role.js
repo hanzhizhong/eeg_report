@@ -13,8 +13,10 @@ module.exports = {
         unique:true 
       },
       roleEncode:{
-        type:Sequelize.STRING,
-        unique:true
+        type:Sequelize.ENUM,
+        values:["superadmin","admin","user","guest"],
+        defaultValue:"user",
+        allowNull:false
       },
       parentRoleId:{
         type:Sequelize.INTEGER
@@ -23,6 +25,14 @@ module.exports = {
         type:Sequelize.BOOLEAN,
         allowNull:false,
         defaultValue:true
+      },
+      createdId:{
+        type:Sequelize.INTEGER,
+        allowNull:false
+      },
+      level:{
+        type:Sequelize.STRING,
+        allowNull:false
       },
       createdAt: {
         allowNull: false,

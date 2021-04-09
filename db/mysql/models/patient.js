@@ -16,9 +16,6 @@ module.exports = (sequelize, DataTypes) => {
   };
   Patient.init({
     patientName: DataTypes.STRING,
-    phone:{
-      type:DataTypes.STRING
-    },
     gender:{
       type:DataTypes.ENUM,
       values:['男','女','其他'],
@@ -27,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
     age:DataTypes.INTEGER,
     checkDate:{
       type:DataTypes.DATE,
-      defaultValue:DataTypes.NOW
+      allowNull:null
     },
     status:{
       type:DataTypes.BOOLEAN,
@@ -40,33 +37,48 @@ module.exports = (sequelize, DataTypes) => {
     bedNo:{
       type:DataTypes.STRING 
     },
-    pharmacy:{
+    medicine:{
       type:DataTypes.STRING 
     },
-    eegMonitorDiagnosis:{
+    begDiag:{
       type:DataTypes.STRING 
     },
-    eegMapDiagnosis:{
+    graphicDiag:{
+      type:DataTypes.STRING 
+    },
+    brainDiag:{
       type:DataTypes.STRING 
     },
     diagnosticianId:{
       type:DataTypes.INTEGER
     },
-    applyDoctorId:{
+    applyDoctor:{
       type:DataTypes.INTEGER
     },
-    operateDoctorId:{
+    operateDoctor:{
       type:DataTypes.INTEGER
     },
     hospitalId:{
       type:DataTypes.INTEGER
     },
-    reportStatus:{
+    reportState:{
       type:DataTypes.ENUM,
       values:['0','1','2','3'],
         defaultValue:'3'
     },
     note:{
+      type:DataTypes.STRING
+    },
+    history:{
+      type:DataTypes.STRING
+    },
+    archives:{
+      type:DataTypes.STRING
+    },
+    bingQu:{
+      type:DataTypes.STRING
+    },
+    keShi:{
       type:DataTypes.STRING
     }
   }, {

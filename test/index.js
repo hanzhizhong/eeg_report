@@ -10,7 +10,7 @@ add2() */
 let ret={...obj,a:2,c:3}
 console.log('ert',ret) */
 
-class Demo{
+/* class Demo{
     async add(a,b){
         await console.log(a+b)
 
@@ -21,4 +21,18 @@ class Demo{
 }
 let demo=new Demo()
 
-demo.bbb()
+demo.bbb() */
+
+
+const fs=require('fs')
+const path=require('path')
+
+/* let tmp=path.extname('hello.txt')
+console.log('tmp',tmp) */
+/* let tmp=fs.unlinkSync('./aa.txt')
+console.log('tmp',tmp) */
+
+const parseFile=require('../config/file-parse')
+for(let [k,v] of Object.entries(parseFile)){
+    console.log(k,v)
+}

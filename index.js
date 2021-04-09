@@ -26,20 +26,25 @@ app.use(jsonError({
         return process.env.NODE_ENV==='production'?rest:{stack,...rest}
     }
 }))
-app.use(koaBody({
+/* app.use(koaBody({
     multipart:true,
     formidable:{
         uploadDir:path.join(__dirname,'public/upload'),
         keepExtensions:true,
         onFileBegin:(formName , file )=>{
-            file.path=path.join(__dirname,'public/upload',`${file.name}`)
+            if(file.name){
+                file.path=path.join(__dirname,'public/upload',`${file.name}`)
+            }
+            
         },
         onError:(err)=>{
+            console.log('kkkkk',err)
             throw new Error(err)
         }
     },
     
-}))
+})) */
+app.use(koaBody())
 
 let accessLogStream=fs.createWriteStream(path.join(__dirname,'logs/access.log'),{flags:"a"})
 app.use(morgan('combined',{stream:accessLogStream}))

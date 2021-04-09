@@ -1,10 +1,15 @@
 const Router=require('koa-router')
 const router=new Router({prefix:'/files'})
-const {find, createFolder,uploadFile}=require('../controller/files')
+const {find, createFolder,checkUploadFile,fetchUploadToken,uploadFile, removeFileById,updateFileById,checkFileExist,findFileById,checkFilesExist,removeMuchFiles}=require('../controller/files')
 const accessGrant=require('../utils/auth')
 router.get('/',accessGrant('readAny','files'),find)
-router.post('/',accessGrant('createOwn','files'),createFolder)
-router.post('/',accessGrant('createOwn','files'),uploadFile)
+router.post('/',accessGrant('createOwn','files'),checkUploadFile,createFolder)
+router.get('/token',fetchUploadToken)
+router.post('/upload',accessGrant('createOwn','files'),checkUploadFile,uploadFile)
+router.patch('/:id',accessGrant('updateOwn','files'),checkFileExist,checkUploadFile,updateFileById)
+router.delete('/:id',accessGrant('deleteOwn','files'),checkFileExist,removeFileById)
+router.get("/:id",accessGrant('readAny','files'),checkFileExist,findFileById)
+router.delete('/more',accessGrant('deleteOwn','files'),checkFilesExist,removeMuchFiles)
 
 
 module.exports=router

@@ -25,7 +25,19 @@ module.exports = (sequelize, DataTypes) => {
       type:DataTypes.STRING
     },
     parentFileId:{
-      type:DataTypes.INTEGER
+      type:DataTypes.INTEGER,
+      allowNull:false,
+      defaultValue:0
+    },
+    level:{
+      type:DataTypes.STRING,
+      allowNull:false,
+      defaultValue:'0'
+    },
+    typeName:{
+      type:DataTypes.ENUM,
+      values:['FOLDER','FILE'],
+      defaultValue:"FILE"
     },
     fileSize:{
       type:DataTypes.INTEGER

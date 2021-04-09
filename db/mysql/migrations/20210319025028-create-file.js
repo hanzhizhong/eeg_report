@@ -16,13 +16,25 @@ module.exports = {
         type:Sequelize.STRING
       },
       parentFileId:{
-        type:Sequelize.INTEGER
+        type:Sequelize.INTEGER,
+        allowNull:false,
+        defaultValue:0
       },
       fileSize:{
         type:Sequelize.INTEGER
       },
       hospitalId:{
         type:Sequelize.INTEGER
+      },
+      level:{
+        type:Sequelize.STRING,
+        defaultValue:"0",
+        allowNull:false
+      },
+      typeName:{
+        type:Sequelize.ENUM,
+        values:['FOLDER','FILE'],
+        defaultValue:"FILE"
       },
       uploadUserId:{
         type:Sequelize.INTEGER
