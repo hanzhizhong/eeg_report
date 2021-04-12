@@ -79,8 +79,10 @@ class Files{
             let tmp=level.split('.')
             //只取后两位
             tmp=tmp.slice(tmp.length-2,tmp.length+1)
-            let file=await File.findByPk(tmp[1]*1)
-            if(file.parentFileId!==tmp[0]*1){
+            if(tmp[1]*1!==parentFileId) ctx.throw(422,'当前不存在层级关系')
+            let role=await Role.findByPk(tmp[1]*1)
+            if(!role) ctx.throw(422,'添加的父层级关系不存在')
+            if(role.parentFileId!==tmp[0]*1){
                 ctx.throw(422,'嵌套层级关系是错误的')
             }
         }

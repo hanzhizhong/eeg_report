@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
       Hospital.belongsToMany(models.Group,{through:"HospitalGroup"})
       Hospital.belongsToMany(models.Meeting,{through:"HospitalMeeting"})
       Hospital.hasMany(models.Hospital,{foreignKey:"parentHospitalId"})
+      Hospital.belongsToMany(models.Doctor,{through:"HospitalDoctor"})
     }
   };
   Hospital.init({
