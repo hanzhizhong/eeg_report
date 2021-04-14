@@ -59,7 +59,7 @@ class Users{
             email:{type:"email",required:false},
             phone:{type:"string",format:/^0?(13|14|15|17|18)[0-9]{9}$/,required:false},
             password:{type:"string",min:6,required:false},
-            status:{type:"boolean",required:false},
+            status:{type:"boolean",required:false,default:true},
             hospitalsId:{type:"array",required:true,itemType:"int",rule:{type:"int"}} //创建时必须关联医院
         })
         let {password,loginName,hospitalsId=[]}=ctx.request.body;
@@ -69,7 +69,7 @@ class Users{
         //检验医院集是否存在
         let ret=await checkRelatedHospitalsExist(hospitalsId)
         if(!ret) ctx.throw(422,'选择关联的医院不存在')
-        user=await User.create({...ctx.request.body,password,createBy,createdAt:new Date(),updatedAt:new Date()})
+        user=await User.create({...ctx.request.body,password,createdAt:new Date(),updatedAt:new Date()})
         let hospitalUser=hospitalsId.map(itm=>{
             let obj={}
             obj.UserId=user.id;
@@ -189,9 +189,7 @@ class Users{
                 {model:Role,through:{attributes:[]}}
             ]
         });
-        user=JSON.parse(JSON.stringify(user))
         ctx.body=user;
-        return user
     }
     //修改
     async updateUserById(ctx){
@@ -201,14 +199,14 @@ class Users{
             userName:{type:"string",required:true},
             email:{type:"email",required:false},
             phone:{type:"string",format:/^0?(13|14|15|17|18)[0-9]{9}$/,required:false},
-            password:{type:"string",min:6,required:false},
-            status:{type:"boolean",required:false}
+            password:{type:"string",min:6,required:true},
+            status:{type:"boolean",required:false,default:true}
         })
         let {password}=ctx.request.body;
         password=md5(`${secert}${password}`)
         let {id:createBy}=ctx.state.user;
         let user=await User.update({...ctx.request.body,password,createBy,updatedAt:new Date()},{where:{id}})
-        ctx.body={message:"success",status:200}
+        ctx.body=user;
     }
     //删除 
     async removeUserById(ctx){
@@ -233,7 +231,7 @@ class Users{
         await next()
     }
     
-    //根据用户id修改关联的医院
+    //根据用户id修改关联的医院 
     async changeUserRelatedHospitals(ctx){
         ctx.verifyParams({
             hospitalsId:{type:"array",requried:true,itemType:"int",rule:{type:"int"}}
@@ -260,15 +258,66 @@ class Users{
     }
     //根据用户id修改关联的用户组
     async changeUserRelatedGroups(ctx){
-
+        ctx.verifyParams({
+            groupsId:{type:"array",required:true,itemType:"int",rule:{type:"int"}}
+        })
+        let {id}=ctx.params;
+        let {groupsId=[]}=ctx.request.body;
+        for(let i=0;i<groupsId.length;i++){
+            let group=await Group.findByPk(groupsId[i])
+            if(!group){
+                ctx.throw(404,'选择关联的用户组不存在')
+                break;
+            }
+        }
+        let userGroup=groupsId.map(itm=>{
+            let obj={}
+            obj.UserId=id;
+            obj.GroupId=itm;
+            obj.createdAt=new Date()
+            obj.updatedAt=new Date()
+            return obj;
+        })
+        await UserGroup.destroy({where:{userId:id}})
+        userGroup=await UserGroup.bulkCreate(userGroup)
+        ctx.body=userGroup;
     }
     //根据用户id获取关联的角色
     async getUserRoles(ctx){
-
+        let {id}=ctx.params;
+        let {Roles:roles}=await User.findByPk(id,{
+            include:[
+                {model:Role,through:{attributes:[]}}
+            ]
+        })
+        ctx.body=roles;
     }
     //根据用户id修改用户关联的角色
     async changeUserRelatedRoles(ctx){
-
+        ctx.verifyParams({
+            rolesId:{type:"array",required:true,itemType:"int",rule:{type:"int"}}
+        })
+        let {id}=ctx.params;
+        let {rolesId=[]}=ctx.request.body;
+        if(rolesId.length===0) ctx.throw(422,'用户关联的角色不能为空')
+        for(let i=0;i<rolesId.length;i++){
+            let role=Role.findByPk(rolesId[i])
+            if(!role){
+                ctx.throw(404,'用户关联的角色不存在')
+                break;
+            }
+        }
+        let userRole=rolesId.map(itm=>{
+            let obj={}
+            obj.UserId=id;
+            obj.RoleId=itm;
+            obj.createdAt=new Date();
+            obj.updatedAt=new Date();
+            return obj;
+        })
+        await UserRole.destroy({where:{userId:id}})
+        userRole=await UserRole.bulkCreate(userRole)
+        ctx.body=userRole;
     }
 }
 

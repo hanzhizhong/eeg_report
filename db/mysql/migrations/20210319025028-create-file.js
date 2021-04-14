@@ -28,7 +28,6 @@ module.exports = {
       },
       level:{
         type:Sequelize.STRING,
-        defaultValue:"0",
         allowNull:false
       },
       typeName:{

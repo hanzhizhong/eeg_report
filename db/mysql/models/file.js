@@ -31,8 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     level:{
       type:DataTypes.STRING,
-      allowNull:false,
-      defaultValue:'0'
+      allowNull:false
     },
     typeName:{
       type:DataTypes.ENUM,
