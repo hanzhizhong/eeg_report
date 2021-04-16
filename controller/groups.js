@@ -4,36 +4,57 @@ const {Sequelize,Group,GroupRole,Role,GroupUser,Hospital,HospitalGroup}=require(
 class Groups{
     //分页查询
     async find(ctx){
-        let {id:createBy}=ctx.state.user;
+        let {Hospitals:hospitals}=ctx.state.user;
+        let hospitalsId=hospitals.map(itm=>{
+            return itm.id;
+        })
         let {pageIndex=1,pageSize=10,fields=''}=ctx.query
         pageIndex=Math.max(pageIndex,1)
         pageSize=Math.max(pageSize,10)
-        let result=await Group.findAndCountAll({
+        let groups=await Group.findAndCountAll({
+            include:[
+                {model:Hospital,through:{attributes:[]},attributes:[],where:{
+                    id:{
+                        [Sequelize.Op.in]:hospitalsId
+                    }
+                }}
+            ],
             where:{
                 groupName:{
                     [Sequelize.Op.like]:`%${fields}%`
-                },
-                createBy
+                }
             },
             limit:pageSize,
-            offset:pageIndex-1
+            offset:(pageIndex-1)*pageSize
         })
-        let {count,rows:groups}=JSON.parse(JSON.stringify(result))
 
-        ctx.body= {count,groups,pageIndex,pageSize}
+        ctx.body=Object.assign({},groups,{pageSize,pageIndex})
     }
     //创建一个用户组
     async createGroup(ctx){
         ctx.verifyParams({
             groupName:{type:"string",required:true},
-            parentGroupId:{type:"int",required:false},
-            status:{type:"boolean",required:false,default:true}
+            parentGroupId:{type:"int",required:false,default:0},
+            status:{type:"boolean",required:false,default:true},
+            hospitalsId:{type:"array",required:true,itemType:"int",rule:{type:"int"}}
         })
-        let {groupName}=ctx.request.body;
+        
+        let {groupName,parentGroupId=0,hospitalsId=[]}=ctx.request.body;
+        if(hospitalsId.length===0) ctx.throw(422,'用户组关联的医院不能为空')
+        //先检查parentGroupId不为零时 是否存在
+        let level=await checkParentGroupExit(ctx,parentGroupId)
         let group=await Group.findOne({where:{groupName}})
         if(group) return ctx.throw(409,'用户组已经存在了')
-        let {id:createBy}=ctx.state.user;
-        group=await Group.create({...ctx.request.body,createBy,createdAt:new Date(),updatedAt:new Date()})
+        group=await Group.create({...ctx.request.body,parentGroupId,level,createdAt:new Date(),updatedAt:new Date()})
+        let hospital_groups=hospitalsId.map(itm=>{
+            let obj={}
+            obj.GroupId=group.id;
+            obj.HospitalId=itm.id;
+            obj.createdAt=new Date();
+            obj.updatedAt=new Date();
+            return obj;
+        })
+        await HospitalGroup.bulkCreate(hospital_groups)
         ctx.body=group
     }
     //检验用户组是否已经存在
@@ -46,20 +67,24 @@ class Groups{
     //删改查findGroupById,updateGroupById,removeGroupById
     async findGroupById(ctx){
         let {id}=ctx.params
-        let group=await Group.findByPk(id)
-        group=JSON.parse(JSON.stringify(groups))
+        let group=await Group.findByPk(id,{
+            include:[
+                {model:Hospital,through:{attributes:[]}}
+            ]
+        })
         ctx.body=group;
     }
     async updateGroupById(ctx){
         ctx.verifyParams({
             groupName:{type:"string",required:true},
-            parentGroupId:{type:"int",required:false},
+            parentGroupId:{type:"int",required:false,default:0},
             status:{type:"boolean",required:false,default:true}
         })
+        let {parentGroupId=0}=ctx.request.body;
+        //先检查parentGroupId不为零时 是否存在
+        let level=await checkParentGroupExit(ctx,parentGroupId)
         let {id}=ctx.params;
-        let {id:createBy}=ctx.state.user
-        group=JSON.parse(JSON.stringify(group))
-        group=await Group.update({...ctx.request.body,createBy,updatedAt:new Date()},{where:{id}})
+        let group=await Group.update({...ctx.request.body,parentGroupId,level,updatedAt:new Date()},{where:{id}})
         ctx.body=group;
     }
 
@@ -70,7 +95,37 @@ class Groups{
         await Promise.all([Group.destroy({where:{id}}),GroupRole.destroy({where:{groupId:group.id}}),GroupUser.destroy({where:{groupId:group.id}}),HospitalGroup.destroy({where:{groupId:group.id}})])
         ctx.status=204
     }
+    //修改用户组关联的医院
+    async changeGroupRelatedHospitals(ctx){
+        ctx.verifyParams({
+            hospitalsId:{type:"array",required:true,itemType:"int",rule:{type:"int"}} 
+        })
+        let {id}=ctx.params;
+        let {hospitalsId}=ctx.request.body;
+        if(hospitalsId.length===0) ctx.throw(422,'用户组关联的医院不能为空')
+        await HospitalGroup.destroy({where:{groupId:id}})
+        
+        let hos_groups=hospitalsId.map(itm=>{
+            let obj={}
+            obj.HospitalId=itm;
+            obj.GroupId=id;
+            obj.createdAt=new Date()
+            obj.updatedAt=new Date()
+            return obj;
+        })
+        await HospitalGroup.bulkCreate(hos_groups)
+        ctx.status=204
+    }
 }
 
+//检验parentGroupId是否存在
+const checkParentGroupExit=async (ctx,id)=>{
+    if(id!==0){
+        let group=await Group.findByPk(id)
+        if(!group) ctx.throw(404,'添加的父级用户组不存在')
+        return group.level+'.'+id;
+    }
+    return 0
+}
 
 module.exports=new Groups()

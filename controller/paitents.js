@@ -1,8 +1,7 @@
 const {Sequelize,Patient,PatientFile,File}=require('../db/mysql/models')
-const {loginInfo}=require('./users')
 class Patients{
     async find(ctx){
-        let {Hospitals:hospitals}=await loginInfo(ctx)
+        let {Hospitals:hospitals}=ctx.state.user;
         hospitals=hospitals.map(itm=>{
             return itm.id;
         })
@@ -24,7 +23,7 @@ class Patients{
                 }
             },
             limit:pageSize,
-            offset:pageIndex-1
+            offset:(pageIndex-1)*pageSize
         })
         ctx.body={...patients,pageIndex,pageSize}
     }

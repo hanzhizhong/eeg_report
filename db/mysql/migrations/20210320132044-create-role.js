@@ -26,10 +26,6 @@ module.exports = {
         allowNull:false,
         defaultValue:true
       },
-      createdId:{
-        type:Sequelize.INTEGER,
-        allowNull:false
-      },
       level:{
         type:Sequelize.STRING,
         allowNull:false

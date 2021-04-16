@@ -15,7 +15,9 @@ module.exports = {
         type:Sequelize.STRING
       },
       parentMenuId:{
-        type:Sequelize.INTEGER
+        type:Sequelize.INTEGER,
+        allowNull:false,
+        defaultStatus:0
       },
       status:{
         type:Sequelize.BOOLEAN,
@@ -24,6 +26,11 @@ module.exports = {
       },
       icon:{
         type:Sequelize.STRING
+      },
+      level:{
+        type:Sequelize.STRING,
+        allowNull:false,
+        defaultStatus:"0"
       },
       createdAt: {
         allowNull: false,

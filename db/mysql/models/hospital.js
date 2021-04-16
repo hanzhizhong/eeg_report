@@ -24,9 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       unique:"hospitalIndex" 
     },
     level:{
-      type:DataTypes.ENUM,
-      values:['省级','市级','地级'],
-      defaultValue:"省级"
+      type:DataTypes.STRING
     },
     parentHospitalId:{
       type:DataTypes.INTEGER 

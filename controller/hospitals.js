@@ -2,17 +2,18 @@
 const {Sequelize,Hospital,HospitalGroup,HospitalDoctor,HospitalMeeting,HospitalUser}=require('../db/mysql/models')
 class Hospitals{
     async find(ctx){
+        let {Hospitals:hospitals}=ctx.state.user;
+        let hospitalsId=hospitals.map(itm=>{
+            return itm.id;
+        })
         let {pageIndex=1,pageSize=10,fields=''}=ctx.query
         pageIndex=Math.max(pageIndex,1)
         pageSize=Math.max(pageSize,10)
         let result=await Hospital.findAndCountAll({
-            include:{
-                model:Hospital,include:{
-                    model:Hospital
-                }
-            },
             where:{
-                level:"省级",
+                id:{
+                    [Sequelize.Op.in]:hospitalsId
+                },
                 [Sequelize.Op.or]:{
                     hospitalName:{
                         [Sequelize.Op.like]:`%${fields}%`
@@ -25,42 +26,29 @@ class Hospitals{
                     }
                 }
             },
+            order:[['level']],
             limit:pageSize,
-            offset:pageIndex-1
+            offset:(pageIndex-1)*pageSize
         })
-        let {count,rows:hospitals}=JSON.parse(JSON.stringify(result))
 
-        ctx.body= {count,hospitals,pageIndex,pageSize}
-    }
-     //检验添加或者编辑时的医院等级
-     async checkHospitalLevel(ctx,next){
-        let {parentHospitalId=null,level}=ctx.request.body;
-        if(!parentHospitalId && level!=='省级') return ctx.throw(403,'当前操作不被允许')
-        //添加的是市级时，根据parentHospitalId判断父级的等级和当前添加的等级是否是存在上下关系
-        if(parentHospitalId){
-            let hospital=await Hospital.findOne({where:{id:parentHospitalId}});
-            if(!hospital) return ctx.throw(404,`父级为${parentHospitalId}的医疗机构不存在`)
-            let {level:p_level}=hospital;
-            //当前添加的是市级 那上级是省级 添加地级上级是市级
-            if((level=p_level==='市级') || (level=p_level==='地级')){
-                ctx.throw(403,'当前操作不被运行')
-            }
-        }
-        await next()
+        ctx.body= Object.assign({},result,{pageIndex,pageSize});
     }
     async createHospital(ctx){
         ctx.verifyParams({
             hospitalName:{type:"string",required:true},
             hospitalEncode:{type:"string",required:true,format:/^[a-zA-Z]{6,24}$/},
-            parentHospitalId:{type:"int",required:false,default:null},
-            level:{type:"enum",required:true,values:['省级','市级','地级']},
+            parentHospitalId:{type:"int",required:true,default:0},
             status:{type:"boolean",required:false,default:true}
         })
-        let {hospitalEncode,hospitalName}=ctx.request.body;
+        let {hospitalEncode,hospitalName,parentHospitalId}=ctx.request.body;
+        //检验父级医院是否存在
+        let level=await checkParentHospitalExit(ctx,parentHospitalId)
         hospitalEncode=hospitalEncode.toUpperCase()
         let hospital=await Hospital.findOne({where:{hospitalEncode,hospitalName}})
         if(hospital) return ctx.throw(409,'医院名和医院编号已经存在了')
-        hospital=await Hospital.create({...ctx.request.body,hospitalEncode,createdAt:new Date(),updatedAt:new Date()})
+        hospital=await Hospital.create({...ctx.request.body,level,hospitalEncode,createdAt:new Date(),updatedAt:new Date()})
+        let {id}=ctx.state.user;
+        await HospitalUser.create({UserId:id,HospitalId:hospital.id,createdAt:new Date(),updatedAt:new Date()})
         ctx.body=hospital;
     }
    
@@ -73,14 +61,15 @@ class Hospitals{
         ctx.verifyParams({
             hospitalName:{type:"string",required:true},
             hospitalEncode:{type:"string",required:true,format:/^[a-zA-Z]{6,24}$/},
-            parentHospitalId:{type:"int",required:false,default:null},
-            level:{type:"enum",required:true,values:['省级','市级','地级']},
+            parentHospitalId:{type:"int",required:true,default:0},
             status:{type:"boolean",required:false,default:true}
         })
         let {id}=ctx.params;
-        let {hospitalEncode}=ctx.request.body;
+        let {hospitalEncode,parentHospitalId}=ctx.request.body;
+        //检验parentHospitalid是否存在
+        let level=await checkParentHospitalExit(ctx,parentHospitalId)
         hospitalEncode=hospitalEncode.toUpperCase()
-        let hospital=await Hospital.update({...ctx.request.body,hospitalEncode,updatedAt:new Date()},{where:{id}})
+        let hospital=await Hospital.update({...ctx.request.body,level,hospitalEncode,updatedAt:new Date()},{where:{id}})
         ctx.body=hospital;
     }
     async removeHospitalById(ctx){
@@ -96,6 +85,13 @@ class Hospitals{
         await next()
     }
 }
-
+const checkParentHospitalExit=async (ctx,id)=>{
+    if(id!==0){
+        let hospital=await Hospital.findByPk(id)
+        if(!hospital) ctx.throw(404,'添加的父级用户组不存在')
+        return hospital.level+'.'+id;
+    }
+    return 0
+}
 
 module.exports=new Hospitals()

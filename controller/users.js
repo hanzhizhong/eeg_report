@@ -7,12 +7,7 @@ const {encrypt,decrypt}=require('../utils/tokenVerify')
 class Users{
     //分页查询
     async find (ctx){
-        let {id}=ctx.state.user;
-        let {Hospitals:hospitals}=await User.findByPk(id,{
-            include:[
-                {model:Hospital,through:{attributes:[]}}
-            ]
-        })
+        let {Hospitals:hospitals}=ctx.state.user;
         hospitals=hospitals.map(itm=>{
             return itm.id;
         })
@@ -45,11 +40,10 @@ class Users{
                 }
             },
             limit:pageSize,
-            offset:pageIndex-1
+            offset:(pageIndex-1)*pageSize
         })
-        let {count,rows:users}=JSON.parse(JSON.stringify(result))
 
-        ctx.body= {count,users,pageIndex,pageSize}
+        ctx.body= {...result,pageIndex,pageSize}
     }
     //创建一个用户
     async createUser(ctx){
@@ -66,6 +60,7 @@ class Users{
         password=md5(`${secert}${password}`)
         let user=await User.findOne({where:{loginName}})
         if(user) return ctx.throw(409,'登录名已经存在')
+        if(hospitalsId.length===0) ctx.throw(422,'关联的医院不能为空')
         //检验医院集是否存在
         let ret=await checkRelatedHospitalsExist(hospitalsId)
         if(!ret) ctx.throw(422,'选择关联的医院不存在')
@@ -79,7 +74,7 @@ class Users{
             return obj;
         })
         hospitalUser=await HospitalUser.bulkCreate(hospitalUser)
-        ctx.body={user,hospitalUser};
+        ctx.body=user;
     }
     async login(ctx){
         ctx.verifyParams({
@@ -105,7 +100,16 @@ class Users{
             if(!token) ctx.throw(401,'鉴权失败，请求头中没有返回token值')
             token=token.replace('Bearer ','')
             let {loginName,id}=decrypt(token)
-            ctx.state.user={loginName,id}
+            let user=await User.findByPk(id,{
+                attributes:{exclude:['password']},
+                include:[
+                    {model:Role,through:{attributes:[]}},
+                    {model:Hospital,through:{attributes:[]}},
+                    {model:Group,through:{attributes:[]}}
+                ]
+            })
+            if(!user) ctx.throw(404,'用户不存在')
+            ctx.state.user=user;
             await next()
         }else{
             await next()
@@ -113,18 +117,8 @@ class Users{
     }
     //请求当前登录的个人信息
     async loginInfo(ctx){
-        let {id}=ctx.state.user;
-        let user=await User.findByPk(id,{
-            attributes:{exclude:['password']},
-            include:[
-                {model:Role,through:{attributes:[]}},
-                {model:Hospital,through:{attributes:[]}},
-                {model:Group,through:{attributes:[]}}
-            ]
-        })
-        user=JSON.parse(JSON.stringify(user));
-        ctx.body=user;
-        return user;
+        let userInfo=ctx.state.user;
+        ctx.body=userInfo;
     }
     //用户id下的资源获取
     async getUserResources(ctx){

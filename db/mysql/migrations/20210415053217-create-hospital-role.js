@@ -1,23 +1,20 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Groups', {
+    await queryInterface.createTable('HospitalRoles', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      groupName: {
-        type: Sequelize.STRING
+      roleId: {
+        type: Sequelize.INTEGER,
+        allowNull:false
       },
-      parentGroupId:{
-        type:Sequelize.INTEGER
-      },
-      status:{
-        type:Sequelize.BOOLEAN,
-        allowNull:false,
-        defaultValue:true
+      hospitalId:{
+        type:Sequelize.INTEGER,
+        allowNull:false
       },
       createdAt: {
         allowNull: false,
@@ -30,6 +27,6 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Groups');
+    await queryInterface.dropTable('HospitalRoles');
   }
 };

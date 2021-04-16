@@ -14,7 +14,7 @@ class Actions{
                 }
             },
             limit:pageSize,
-            offset:pageIndex-1
+            offset:(pageIndex-1)*pageSize
         })
         let {count,rows:actions}=JSON.parse(JSON.stringify(result))
 

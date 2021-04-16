@@ -33,6 +33,11 @@ module.exports = (sequelize, DataTypes) => {
     icon:{
       type:DataTypes.STRING
     },
+    level:{
+      type:DataTypes.STRING,
+      defaultValue:"0",
+      allowNull:false
+    }
   }, {
     sequelize,
     modelName: 'Menu',

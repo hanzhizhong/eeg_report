@@ -1,49 +1,68 @@
-const {Sequelize,Role,Permission,RolePermission,UserRole,GroupRole}=require('../db/mysql/models')
-let {loginInfo}=require('./users')
+const {Sequelize,Role,Permission,RolePermission,UserRole,GroupRole,Hospital,HospitalRole}=require('../db/mysql/models')
 
 class Roles{
     async find(ctx){
-        let {id}=ctx.state.user;
+        let {Hospitals:hospitals}=ctx.state.user;
+        let hospitalsId=hospitals.map(itm=>{
+            return itm.id;
+        })
         let {pageIndex=1,pageSize=10}=ctx.query;
         pageIndex=Math.max(pageIndex,1)
         pageSize=Math.max(pageSize,10)
         let roles=await Role.findAndCountAll({
-            where:{
-                createdId:id 
-            },
+            include:[
+                {model:Hospital,through:{attributes:[]},attributes:[],where:{
+                    id:{
+                        [Sequelize.Op.in]:hospitalsId
+                    }
+                }}
+            ],
             limit:pageSize,
             offset:(pageIndex-1)*pageSize
         })
-        ctx.body=roles;
+        ctx.body={...roles,pageSize,pageIndex};
     }
     async createRole(ctx){
         ctx.verifyParams({
-            level:{type:"string",required:true},
-            parentRoleId:{type:"int",required:true},
+            parentRoleId:{type:"int",required:true,default:0},
             roleName:{type:"string",required:true},
             roleEncode:{type:"enum",values:["admin","user","guest"],required:true},
             status:{type:"boolean",required:false,default:true},
-            createdId:{type:"int",required:true}
+            hospitalsId:{type:"array",required:true,itemType:"int",rule:{type:"int"}}
         })
-        let {roleName}=ctx.request.body;
+        let {roleName,parentRoleId=0,hospitalsId=[]}=ctx.request.body;
+        if(hospitalsId.length===0) ctx.throw(422,'角色关联的医院不能为空')
+        //检验parentRoleId
+        let level=await checkParentRoleExist(ctx,parentRoleId)
         let role=await Role.findOne({
             where:{roleName}
         })
         if(role) ctx.throw(409,'角色名称已经存在了')
-        role=await Role.create({...ctx.request.body,createdAt:new Date(),updatedAt:new Date()})
+        role=await Role.create({...ctx.request.body,parentRoleId,level,createdAt:new Date(),updatedAt:new Date()})
+        //创建 role_hospital
+        let hs_roles=hospitalsId.map(itm=>{
+            let obj={}
+            obj.RoleId=role.id;
+            obj.HospitalId=itm;
+            obj.createdAt=new Date()
+            obj.updatedAt=new Date()
+            return obj;
+        })
+        await HospitalRole.bulkCreate(hs_roles)
         ctx.body=role;
     }
     async updateRoleById(ctx){
         ctx.verifyParams({
-            level:{type:"string",required:true},
-            parentRoleId:{type:"int",required:true},
+            parentRoleId:{type:"int",required:true,default:0},
             roleName:{type:"string",required:true},
             roleEncode:{type:"enum",values:["admin","user","guest"],required:true},
-            status:{type:"boolean",required:false,default:true},
-            createdId:{type:"int",required:true}
+            status:{type:"boolean",required:false,default:true}
         })
         let {id}=ctx.params;
-        let role=await Role.update({...ctx.request.body,updatedAt:new Date()},{where:{id}})
+        //检验parentRoleId
+        let {parentRoleId=0}=ctx.request.body;
+        let level=await checkParentRoleExist(ctx,parentRoleId)
+        let role=await Role.update({...ctx.request.body,parentRoleId,level,updatedAt:new Date()},{where:{id}})
         ctx.body=role;
     }
     async findRoleById(ctx){
@@ -67,36 +86,36 @@ class Roles{
         if(!role) ctx.throw(404,'角色对象不存在')
         await next()
     }
-    //检查添加的嵌套关系是否符合规则
-    async checkLevelRelated(ctx,next){
+
+    //改变和角色关联的医院
+    async changeRoleRelatedHospitals(ctx){
         ctx.verifyParams({
-            level:{type:"string",required:true},
-            parentRoleId:{type:"int",required:true}
+            hospitalsId:{type:'array',required:true,itemType:"int",rule:{type:"int"}}
         })
-        let {level,parentRoleId}=ctx.request.body;
-        if(level.length>2){
-            let tmp=level.split('.')
-            //只取后两位
-            tmp=tmp.slice(tmp.length-2,tmp.length+1)
-            if(tmp[1]*1!==parentRoleId) ctx.throw(422,'当前不存在层级关系')
-            let role=await Role.findByPk(tmp[1]*1)
-            if(!role) ctx.throw(422,'添加的父层级关系不存在')
-            if(role.parentRoleId!==tmp[0]*1){
-                ctx.throw(422,'嵌套层级关系是错误的')
-            }
-        }
-        await next()
+        let {id}=ctx.params;
+        let {hospitalsId}=ctx.request.body;
+        if(hospitalsId.length===0) ctx.throw(422,'角色关联的医院不能为空')
+        await HospitalRole.destroy({where:{roleId:id}})
+        let hs_roles=hospitalsId.map(itm=>{
+            let obj={}
+            obj.RoleId=id;
+            obj.HospitalId=itm;
+            obj.createdAt=new Date()
+            obj.updatedAt=new Date()
+            return obj;
+        })
+        await HospitalRole.bulkCreate(hs_roles)
     }
     //改变用户角色的权限
     async changeRolePermissions(ctx){
         ctx.verifyParams({
-            idList:{type:"array",required:true,allowEmpty:true}
+            permissionsId:{type:"array",required:true,allowEmpty:true}
         })
         let {id}=ctx.params;
         //先删除已经存在的role-permission关系，然后保存当前的
-        let {idList}=ctx.request.body;
+        let {permissionsId}=ctx.request.body;
         await RolePermission.destroy({where:{roleId:id}});
-        let role_permissions=idList.map(itm=>{
+        let role_permissions=permissionsId.map(itm=>{
             let obj={}
             obj.RoleId=id;
             obj.PermissionId=itm;
@@ -107,6 +126,16 @@ class Roles{
         role_permissions=await RolePermission.bulkCreate([...role_permissions])
         ctx.body=role_permissions;
     }
+}
+
+//检验父级role是否存在
+const checkParentRoleExist=async (ctx,id)=>{
+    if(id!==0){
+        let role=await Role.findByPk(id)
+        if(!role) ctx.throw(404,'父级角色不存在')
+        return role.level+'.'+id;
+    }
+    return 0
 }
 
 module.exports=new Roles()

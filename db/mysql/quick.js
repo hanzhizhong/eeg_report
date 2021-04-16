@@ -20,7 +20,9 @@ let model1 = [
     "npx sequelize-cli model:create --name HospitalMeeting --attributes hospitalId:integer",
     'npx sequelize-cli model:create --name HospitalUser --attributes userId:integer',
     'npx sequelize-cli model:create --name PatientFile --attributes patientId:integer',
-    "npx sequelize-cli model:create --name HospitalGroup --attributes hospitalId:integer"
+    "npx sequelize-cli model:create --name HospitalGroup --attributes hospitalId:integer",
+    "npx sequelize-cli model:create --name HospitalRole --attributes hospitalId:integer"
+    
 ]
 
 

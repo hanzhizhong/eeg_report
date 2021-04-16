@@ -2,13 +2,12 @@
 
 const qiniu=require('qiniu')
 const {Sequelize,File,Hospital,User}=require('../db/mysql/models')
-const {loginInfo}=require('./users')
 
 const {qiniu:{accessKey,secretKey,options}}=require('../config')
 
 class Files{
     async find(ctx){
-        let {Hospitals:hospitals}=await loginInfo(ctx)
+        let {Hospitals:hospitals}=ctx.state.user;
         hospitals=hospitals.map(itm=>{
             return itm.id;
         })
@@ -16,11 +15,6 @@ class Files{
         pageIndex=Math.max(pageIndex,1)
         pageSize=Math.max(pageSize,10)
         let files=await File.findAndCountAll({
-            attributes:{exclude:['level']},
-            include:[
-                {model:Hospital},
-                {model:User}
-            ],
             where:{
                 fileName:{
                     [Sequelize.Op.like]:`%${fields}%`
@@ -33,17 +27,18 @@ class Files{
             limit:pageSize,
             offset:(pageIndex-1)*pageSize
         })
-        ctx.body=files;
+        ctx.body=Object.assign({},files,{pageIndex,pageSize});
     }
     async createFolder(ctx){
         ctx.verifyParams({
             fileName:{type:"string",required:false,allowEmpty:true},
-            parentFileId:{type:"int",required:true,default:0},
+            parentFileId:{type:"int",required:false,default:0},
             hospitalId:{type:"int",required:true},
-            level:{type:"string",required:true,format:/^0(\.[1-9])*$/},
             typeName:{type:"enum",required:true,values:['FOLDER']}
        })
-       let {fileName="新建文件夹",parentFileId,hospitalId,level,typeName}=ctx.request.body;
+       let {fileName="新建文件夹",parentFileId=0,hospitalId,typeName}=ctx.request.body;
+       //检验父级文件是否存在
+       let level=await checkParentFileExist(ctx,parentFileId)
        if(fileName.length===0) fileName="新建文件夹";
        let file=await File.findOne({
            where:{
@@ -55,50 +50,21 @@ class Files{
            }
        })
        if(file) ctx.throw(409,'文件夹名称已经存在')
-       file=await File.create({...ctx.request.body,fileName,createdAt:new Date(),updatedAt:new Date()})
+       file=await File.create({...ctx.request.body,parentFileId,fileName,level,createdAt:new Date(),updatedAt:new Date()})
        ctx.body=file;
-    }
-    //校验上传的文件信息
-    async checkUploadFile(ctx,next){
-        let {level}=ctx.request.body;
-        if(!level) ctx.throw(422,'验证参数缺失')
-        /* 
-            level:条件的判断
-            "0.1/0.1.2"
-            顶级parentId/所属上级Id/选择的parentId
-
-            判断是否符合规矩 先判断 1 后判断2
-            如0.1.2
-            末尾的id=2 查看id为2的这条数据的父级id 是否和 第二个数1相等，相等就是符合条件，不等就不符条件
-
-            传的level 1.1 最后一位和 parentId不等时，表示需要创建下一级
-            相等就是创建同一级的
-        */
-        //检验level和parentFileId是否符合规定
-        if(level.length>2){
-            let tmp=level.split('.')
-            //只取后两位
-            tmp=tmp.slice(tmp.length-2,tmp.length+1)
-            if(tmp[1]*1!==parentFileId) ctx.throw(422,'当前不存在层级关系')
-            let role=await Role.findByPk(tmp[1]*1)
-            if(!role) ctx.throw(422,'添加的父层级关系不存在')
-            if(role.parentFileId!==tmp[0]*1){
-                ctx.throw(422,'嵌套层级关系是错误的')
-            }
-        }
-        await next()
     }
     async uploadFile(ctx){
         //这一步分是需要前端上传后传过来的上传结果
         ctx.verifyParams({
             fileName:{type:"string",required:true,allowEmpty:false},
-            parentFileId:{type:"int",required:true,default:0},
+            parentFileId:{type:"int",required:false,default:0},
             hospitalId:{type:"int",required:true},
-            level:{type:"string",required:true,format:/^0(\.[1-9])*$/},
             typeName:{type:"enum",required:true,values:['FILE']}
         })
-        
-        let file=await File.create({...ctx.request.body,createdAt:new Date(),updatedAt:new Date()})
+        let {parentFileId=0}=ctx.request.body;
+        //检验上级是否是文件夹
+        let level=await checkParentFileExist(ctx,parentFileId)
+        let file=await File.create({...ctx.request.body,parentFileId,level,createdAt:new Date(),updatedAt:new Date()})
         ctx.body=file;
     }
     async fetchUploadToken(ctx){
@@ -110,28 +76,20 @@ class Files{
     async updateFileById(ctx){
         ctx.verifyParams({
             fileName:{type:"string",required:false,allowEmpty:true},
-            parentFileId:{type:"int",required:true,default:0},
+            parentFileId:{type:"int",required:false,default:0},
             hospitalId:{type:"int",required:true},
-            level:{type:"string",required:true,format:/^0(\.[1-9])*$/},
             typeName:{type:"enum",required:true,values:["FILE",'FOLDER']}
         })
         let {id}=ctx.params;
-        let file=await File.update({...ctx.request.body,updatedAt:new Date()},{where:{id}})
+        let {parentFileId=0}=ctx.request.body;
+        let level=await checkParentFileExist(ctx,parentFileId)
+        let file=await File.update({...ctx.request.body,parentFileId,level,updatedAt:new Date()},{where:{id}})
         ctx.body=file;
     }
     async findFileById(ctx){
         let {id}=ctx.params;
         let file=await File.findByPk(id)
-        if(file.typeName.toLowerCase()==='folder'){
-            let level=`${file.level}.${file.id}`
-            file=await File.findAll({
-                where:{
-                    level:{
-                        [Sequelize.Op.like]:`${level}%`
-                    }
-                }
-            })
-        }
+        
         ctx.body=file;
     }
     async removeFileById(ctx){
@@ -180,7 +138,6 @@ class Files{
                 }
             }
         })
-        console.log('ffff',files)
         await next()
     }
 }
@@ -328,6 +285,16 @@ const upload2Qiniu=()=>{
         });
     })
     
+}
+
+//检验父级文件
+const checkParentFileExist=async (ctx,id)=>{
+    if(id!==0){
+        let file=await File.findByPk(id)
+        if(!file) ctx.throw(404,"父级文件夹不存在")
+        return file.level+'.'+id;
+    }
+    return 0
 }
 
 module.exports=new Files()

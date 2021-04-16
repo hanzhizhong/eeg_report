@@ -1,8 +1,7 @@
 const {Sequelize,Doctor,HospitalDoctor,Hospital}=require('../db/mysql/models')
-const {loginInfo}=require('./users')
 class Doctors{
     async find(ctx){
-        let {Hospitals:hospitals}=await loginInfo(ctx)
+        let {Hospitals:hospitals}=ctx.state.user;
         hospitals=hospitals.map(itm=>{
             return itm.id;
         })
@@ -30,7 +29,7 @@ class Doctors{
             phone:{type:"string",required:false,format:/^0?(13|14|15|17|18)[0-9]{9}$/,allowEmpty:true},
             hospitalId:{type:"array",required:true,itemType:"int",rule:{type:"int"}}
         })
-        let {Hospitals:hospitals}=await loginInfo(ctx)
+        let {Hospitals:hospitals}=ctx.state.user;
         hospitals=hospitals.map(itm=>{
             return itm.id;
         })

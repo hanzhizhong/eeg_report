@@ -14,7 +14,7 @@ class Elements{
                 }
             },
             limit:pageSize,
-            offset:pageIndex-1
+            offset:(pageIndex-1)*pageSize
         })
         let {count,rows:elements}=JSON.parse(JSON.stringify(result))
 
