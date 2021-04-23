@@ -11,7 +11,8 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Patient.belongsToMany(models.File,{through:"PatientFile"})
+      Patient.hasMany(models.File,{foreignKey:"patientId"})
+
     }
   };
   Patient.init({
@@ -49,14 +50,11 @@ module.exports = (sequelize, DataTypes) => {
     brainDiag:{
       type:DataTypes.STRING 
     },
-    diagnosticianId:{
-      type:DataTypes.INTEGER
-    },
     applyDoctor:{
-      type:DataTypes.INTEGER
+      type:DataTypes.STRING
     },
     operateDoctor:{
-      type:DataTypes.INTEGER
+      type:DataTypes.STRING
     },
     hospitalId:{
       type:DataTypes.INTEGER

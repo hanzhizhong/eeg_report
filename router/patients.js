@@ -7,7 +7,5 @@ router.post('/',createPatient)
 router.get('/:id',checkPatientExist,findPatientById)
 router.patch('/:id',checkPatientExist,updatePatientById)
 router.delete('/:id',checkPatientExist,removePatientById)
-router.get('/:id/files',checkPatientExist,findPatientFilesById)
-router.patch('/:patientId/files/:fileId',patientFilesUpdate)
-router.delete('/:patientId/files/:fileId',patientFilesRemove)
+
 module.exports=router;

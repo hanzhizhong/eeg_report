@@ -97,12 +97,12 @@ class Doctors{
     //修改医师绑定的医院
     async changeDoctorRelatedHospitals(ctx){
         ctx.verifyParams({
-            idList:{type:"array",requried:true,itemType:"int",rule:{type:"int"}}
+            hospitalsId:{type:"array",requried:true,itemType:"int",rule:{type:"int"}}
         })
         let {id}=ctx.params;
         await HospitalDoctor.destroy({where:{doctorId:id}})
-        let {idList}=ctx.request.body;
-        let hospital_doctors=idList.map(itm=>{
+        let {hospitalsId}=ctx.request.body;
+        let hospital_doctors=hospitalsId.map(itm=>{
             let obj={}
             obj.HospitalId=itm;
             obj.DoctorId=id;

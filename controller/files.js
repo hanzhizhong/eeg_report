@@ -34,6 +34,7 @@ class Files{
             fileName:{type:"string",required:false,allowEmpty:true},
             parentFileId:{type:"int",required:false,default:0},
             hospitalId:{type:"int",required:true},
+            patientId:{type:"int",required:true},
             typeName:{type:"enum",required:true,values:['FOLDER']}
        })
        let {fileName="新建文件夹",parentFileId=0,hospitalId,typeName}=ctx.request.body;
@@ -59,6 +60,7 @@ class Files{
             fileName:{type:"string",required:true,allowEmpty:false},
             parentFileId:{type:"int",required:false,default:0},
             hospitalId:{type:"int",required:true},
+            patientId:{type:"int",required:true},
             typeName:{type:"enum",required:true,values:['FILE']}
         })
         let {parentFileId=0}=ctx.request.body;
@@ -87,57 +89,76 @@ class Files{
         ctx.body=file;
     }
     async findFileById(ctx){
+        let {Hospitals:hospitals}=ctx.state.user;
+        let hospitalsId=hospitals.map(itm=>{
+            return itm.id;
+        })
         let {id}=ctx.params;
         let file=await File.findByPk(id)
+        if(file.typeName.toLowerCase()==="folder"){
+            let {pageSize=10,pageIndex=1}=ctx.query;
+            pageSize=Math.max(pageSize,10)
+            pageIndex=Math.max(pageIndex,1)
+            file=File.findAndCountAll({
+                where:{
+                    level:{
+                        [Sequelize.Op.like]:`${file.level}%`
+                    },
+                    hospitalId:{
+                        [Sequelize.Op.in]:hospitalsId 
+                    }
+                },
+                limit:pageSize,
+                offset:(pageIndex-1)*pageSize
+            })
+            file={...file,pageIndex,pageSize}
+        }
         
         ctx.body=file;
     }
     async removeFileById(ctx){
         let {id}=ctx.params;
+        id=id.split(',').map(itm=>itm*1)
         //同时删除七牛云上的文件
+        await removeMuchFilesFromQiniu(id)
         //判断是否是文件夹
-        let file=await File.findByPk(id)
-        if(file.typeName.toLowerCase()==='folder'){
-            let level=`${file.level}.${file.id}`
-            file=await File.destroy({
-                where:{
-                    level:{
-                        [Sequelize.Op.like]:`${level}%`
+        let files=await File.findAll({
+            where:{id:{
+                [Sequelize.Op.in]:id
+            }}
+        })
+        for(let i=0;i<files.length;i++){
+            if(files[i].typeName.toLowerCase()==='folder'){
+                let level=`${files[i].level}.${files[i].id}`
+                await File.destroy({
+                    where:{
+                        level:{
+                            [Sequelize.Op.like]:`${level}%`
+                        }
                     }
+                })
+            }
+        }
+        await File.destroy({
+            where:{
+                id:{
+                    [Sequelize.Op.in]:id
                 }
-            })
-        }
-        //有先后的问题
-        try{
-            await removeFileFromQiniu(ctx)
-        }catch(err){
-            throw new Error(err)
-        }
-        await File.destroy({where:{id}})
-        ctx.status=204;
-    }
-    //批量删除
-    async removeMuchFiles(ctx){
-        let {idList}=ctx.request.body;
-        await removeMuchFilesFromQiniu(idList)
-        await File.destroy({where:{id:{[Seqeulize.Op.in]:idList}}})
+            }
+        })
         ctx.status=204;
     }
     async checkFileExist(ctx,next){
         let {id}=ctx.params;
-        let file=await File.findByPk(id)
-        if(!file) ctx.throw(404,'文件或文件夹不存在')
-        await next()
-    }
-    async checkFilesExist(ctx,next){
-        let {idList}=ctx.request.body;
-        let files=await File.findAll({
+        id=id.split(',').map(itm=>{return itm*1})
+        let file=await File.findAll({
             where:{
                 id:{
-                    [Sequelize.Op.in]:idList
+                    [Sequelize.Op.in]:id
                 }
             }
         })
+        if(file.length===0) ctx.throw(404,'文件或文件夹不存在')
         await next()
     }
 }

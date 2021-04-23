@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       Role.belongsToMany(models.User,{through:"UserRole"});
       Role.belongsToMany(models.Permission,{through:"RolePermission"});
       Role.belongsToMany(models.Group,{through:"GroupRole"})
+      Role.belongsToMany(models.Hospital,{through:"HospitalRole"})
     }
   };
   Role.init({

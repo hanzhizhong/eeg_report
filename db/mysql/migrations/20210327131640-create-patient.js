@@ -44,14 +44,11 @@ module.exports = {
       eegMapDiagnosis:{
         type:Sequelize.STRING 
       },
-      diagnosticianId:{
-        type:Sequelize.INTEGER
+      applyDoctor:{
+        type:Sequelize.STRING
       },
-      applyDoctorId:{
-        type:Sequelize.INTEGER
-      },
-      operateDoctorId:{
-        type:Sequelize.INTEGER
+      operateDoctor:{
+        type:Sequelize.STRING
       },
       hospitalId:{
         type:Sequelize.INTEGER

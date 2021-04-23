@@ -26,6 +26,10 @@ module.exports = {
       hospitalId:{
         type:Sequelize.INTEGER
       },
+      patientId:{
+        type:Sequelize.INTEGER,
+        allowNull:false
+      },
       level:{
         type:Sequelize.STRING,
         allowNull:false

@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       File.belongsToMany(models.Patient,{through:"PatientFile"});
       File.belongsTo(models.Hospital,{foreignKey:"hospitalId"});
       File.belongsTo(models.User,{foreignKey:"uploadUserId"})
+      File.belongsTo(models.Patient,{foreignKey:"patientId"})
     }
   };
   File.init({
@@ -46,6 +47,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     uploadUserId:{
       type:DataTypes.INTEGER
+    },
+    patientId:{
+      type:DataTypes.INTEGER,
+      allowNull:false
     },
     status:{
       type:DataTypes.BOOLEAN,
